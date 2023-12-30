@@ -1,25 +1,20 @@
-//generateChartData.js
+// generateChartData.js
 
-function randomColor() {
-    const r = Math.floor(Math.random() * 256);
-    const g = Math.floor(Math.random() * 256);
-    const b = Math.floor(Math.random() * 256);
-    return `rgb(${r}, ${g}, ${b})`;
-  }
-  
-  function generateChartData(...pointsArrays) {
-    return pointsArrays.map(points => {
-      return {
-        label: 'Полилиния',
-        data: points.map(point => ({ x: point.x, y: point.y })),
-        borderColor: randomColor(),
-        borderWidth: 2,
-        fill: false,
-      };
-    });
-  }
-  
-  module.exports = generateChartData;
-  
-  
-  
+function randomContrastColor() {
+  const hue = Math.floor(Math.random() * 360); // Случайный оттенок от 0 до 359
+  return `hsl(${hue}, 100%, 50%)`; // 100% насыщенность и 50% светлость
+}
+
+function generateChartData(...pointsArrays) {
+  return pointsArrays.map(points => {
+    return {
+      label: 'Полилиния',
+      data: points.map(point => ({ x: point.x, y: point.y })),
+      borderColor: randomContrastColor(),
+      borderWidth: 2,
+      fill: false,
+    };
+  });
+}
+
+module.exports = generateChartData;

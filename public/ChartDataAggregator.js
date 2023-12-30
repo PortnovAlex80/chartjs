@@ -6,7 +6,7 @@ const generateChartData = require('../utils/generateChartData');
 
 function ChartDataAggregator() {
     const originalPoints = generatePolyline();
-    const simplifiedPoints = rdpSimplifier(originalPoints, 0.20);
+    const simplifiedPoints = rdpSimplifier(originalPoints, 0.25);
   
     // Добавляйте дополнительные секции здесь
     // ...

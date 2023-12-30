@@ -1,4 +1,5 @@
 // server.js
+require('dotenv').config();
 const express = require('express');
 const { exec } = require('child_process');
 const fs = require('fs');
@@ -11,7 +12,7 @@ app.use(express.static('public'));
 
 app.get('/data', (req, res) => {
   // Проверка наличия и чтение файла
-  if (fs.existsSync(csvFilePath)) {
+  if (fs.existsSync(csvFilePath) && !process.env.IGNORE_CSV) {
     const fileContent = fs.readFileSync(csvFilePath, 'utf8');
     if (fileContent.trim()) {
       try {
