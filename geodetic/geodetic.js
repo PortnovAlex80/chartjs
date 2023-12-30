@@ -1,8 +1,7 @@
 // geodetic.js
-function generateError() {
-    return (Math.random() - 0.5) * 0.2; // Генерируем от -0.1 до 0.1
-  }
-  
+const generateError = require('./errorGenerator'); // Импортируем функцию generateError
+const { formatPoint } = require('../utils/pointFormatter');
+
   function generatePoints() {
     const points = [];
     let x = 0;
@@ -14,11 +13,7 @@ function generateError() {
       const errorX = generateError();
       const errorY = generateError();
   
-      const point = {
-        x: (x + errorX).toFixed(precision),
-        y: (errorY).toFixed(precision),
-        // Добавьте другие данные о съемке, если необходимо
-      };
+      const point = formatPoint(x + errorX, errorY);
   
       points.push(point);
       x += step;

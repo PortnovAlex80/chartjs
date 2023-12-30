@@ -4,7 +4,9 @@ const fs = require('fs');
 const app = express();
 const port = 3000;
 const csvFilePath = './data/data.csv';
-const generatePoints = require('./geodetic/geodetic');
+// const generatePoints = require('./geodetic/geodetic');
+const generatePoints = require('./geodetic/polylineErrorGenerator');
+
 
 app.use(express.static('public'));
 

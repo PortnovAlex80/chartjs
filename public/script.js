@@ -13,7 +13,7 @@ async function loadData() {
 
     // Выбор типа графика
     // const chartType = "line", "scatter";
-    const chartType = "scatter";
+    const chartType = "line";
 
     let chartData;
     switch (chartType) {
