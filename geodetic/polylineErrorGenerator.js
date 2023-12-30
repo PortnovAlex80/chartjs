@@ -2,7 +2,7 @@
 const generateError = require('./errorGenerator');
 const { formatPoint } = require('../utils/pointFormatter');
 
-// Захардкоженный массив вершин
+// Захардкоженный массив вершин полилинии
 const vertices = [
   { x: 0, y: 0, angle: 0, length: 50 },
   { angle: 30, length: 20 },

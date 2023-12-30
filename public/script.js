@@ -1,16 +1,17 @@
+//script.js
 var ctx = document.getElementById('myChart').getContext('2d');
-const createLineChartData = require('./lineChart');
-const createScatterChartData = require('./scatterChart');
+const createLineChartData = require('../charts/lineChart');
+const createScatterChartData = require('../charts/scatterChart');
 
 async function loadData() {
   try {
     // Отправляем GET-запрос на сервер для получения данных
     const response = await fetch('/data');
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`Какая то ошибка от сервера. HTTP error! status: ${response.status}`);
     }
     const data = await response.json(); // Получаем данные в формате JSON
-
+    console.log({data});
     // Выбор типа графика
     // const chartType = "line", "scatter";
     const chartType = "line";
