@@ -1,20 +1,29 @@
 // Функция для создания данных для точечного графика
-function createScatterChartData(data) {
-    return {
-      datasets: [
-        {
-          label: "Geodetic Survey",
-          borderColor: 'rgb(255, 99, 132)',
-          borderWidth: 3,
-          data: data.map(entry => ({ x: parseFloat(entry.x), y: parseFloat(entry.y) })),
-          pointBackgroundColor: 'rgb(255, 99, 132)',
-          pointBorderColor: 'rgb(5, 99, 132)',
-          pointRadius: 2,
-          showLine: false,
-        }
-      ]
-    };
-  }
-  
-  module.exports = createScatterChartData;
-  
+function createScatterChartData(dataSets) {
+  // Логирование входных данных
+  console.log("Данные, поступившие в createScatterChartData:", dataSets);
+
+  return {
+    datasets: dataSets.map(dataset => {
+      // Преобразование данных каждого датасета
+      const scatterData = dataset.data.map(entry => {
+        console.log("Обрабатываемая точка:", entry); // Логирование каждой точки
+        return { x: parseFloat(entry.x), y: parseFloat(entry.y) };
+      });
+
+      return {
+        label: dataset.label,
+        borderColor: dataset.borderColor,
+        borderWidth: 2,
+        data: scatterData,
+        pointBackgroundColor: dataset.borderColor,
+        pointBorderColor: dataset.borderColor,
+        pointRadius: 2,
+        showLine: true // Добавлено для отображения линии
+      };
+    })
+  };
+}
+
+module.exports = createScatterChartData;
+

@@ -14,7 +14,7 @@ async function loadData() {
     console.log({data});
     // Выбор типа графика
     // const chartType = "line", "scatter";
-    const chartType = "line";
+    const chartType = "scatter";
 
     let chartData;
     switch (chartType) {
@@ -28,6 +28,8 @@ async function loadData() {
         throw new Error('Неизвестный тип графика');
     }
 
+    console.log("Данные для графика:", chartData); // Выводим chartData в лог
+
     var chart = new Chart(ctx, {
       type: chartType,
       data: chartData,
@@ -40,11 +42,13 @@ async function loadData() {
               display: true,
               text: 'Метры',
             },
+            // min: 0,
+            // max: 150
           },
           y: {
             beginAtZero: true,
-            min: -1,
-            max: 1,
+            // min: -1,
+            // max: 1,
           },
         },
       },

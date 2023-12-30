@@ -71,8 +71,7 @@ function writeCsvAndRespond(dataSets, res) {
       res.json(dataSets);
     }
   });
-}
-
+}  
 
 
 let browserProcess = null;
