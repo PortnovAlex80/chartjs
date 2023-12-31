@@ -1,6 +1,7 @@
 import { IPoint } from '../interfaces/IPoint';
 import { IFilter } from '../interfaces/IFilter';
 
+
 const leastSquaresFilter: IFilter = (points: IPoint[], epsilon: number): IPoint[] => {
     // Реализация метода наименьших квадратов и логика фильтра
     const leastSquaresLine = (points: IPoint[]): { slope: number; intercept: number } => {
