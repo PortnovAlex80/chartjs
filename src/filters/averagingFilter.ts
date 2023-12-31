@@ -1,18 +1,26 @@
 import { IPoint } from '../interfaces/IPoint';
 import { IFilter } from '../interfaces/IFilter';
 
-const averagingFilter: IFilter = (points: IPoint[], windowSize: number = 3): IPoint[] => {
+// Функция для расчета расстояния между двумя точками в декартовых координатах
+function calculateDistance(pointA: IPoint, pointB: IPoint): number {
+    return Math.sqrt(Math.pow(pointB.x - pointA.x, 2) + Math.pow(pointB.y - pointA.y, 2));
+}
+
+const averagingFilter: IFilter = (points: IPoint[], windowSizeInMeters: number): IPoint[] => {
     const smoothedPoints: IPoint[] = [];
 
     for (let i = 0; i < points.length; i++) {
         let sumX = 0, sumY = 0, count = 0;
 
-        for (let j = -Math.floor(windowSize / 2); j <= Math.floor(windowSize / 2); j++) {
+        for (let j = -points.length; j < points.length; j++) {
             const index = i + j;
             if (index >= 0 && index < points.length) {
-                sumX += points[index].x;
-                sumY += points[index].y;
-                count++;
+                const distance = calculateDistance(points[i], points[index]);
+                if (distance <= windowSizeInMeters / 2) {
+                    sumX += points[index].x;
+                    sumY += points[index].y;
+                    count++;
+                }
             }
         }
 

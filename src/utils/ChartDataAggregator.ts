@@ -1,23 +1,40 @@
 // src/utils/ChartDataAggregator.ts
-import { generatePolyline } from '../sectiongenerators/polylineGenerator.js';
-import visualDatasetBuilder from '../utils/generateChartData.js';
 import { IDataSet } from '../interfaces/IDataSet';
-import { IPoint } from '../interfaces/IPoint';
+import { generatePolyline } from '../sectiongenerators/polylineGenerator.js';
+import visualDatasetBuilder from './VisualDatasetBuilder.js';
 import rdpSimplifier from '../filters/rdpSimplifier.js';
 import leastSquaresFilter from '../filters/leastSquaresFilter.js';
 import derivativeFilter from '../filters/derivativeFilter.js';
-import averagingFilter from '../filters/averagingFilter.js'
+import averagingFilter from '../filters/averagingFilter.js';
+import kalmanFilter from '../filters/kalmanFilter.js';
+import integralFilter from '../filters/integralFilter.js';
 
 export default function ChartDataAggregator(): IDataSet[] {
-    const section1: IPoint[] = generatePolyline();
-    const section2: IPoint[] = rdpSimplifier(section1, 0.25);
-    const section3: IPoint[] = leastSquaresFilter(section1, 0.25);
-    const section5: IPoint[] = averagingFilter(section1);
-    const section4: IPoint[] = derivativeFilter(section1);
+
+    const sections = [];    
+
+    const originalPoints = generatePolyline();
+    sections.push({ label: "ТЛО", points: originalPoints });
+    const averagingPoints = averagingFilter(originalPoints, 2);
+    sections.push({ label: "Сглаживание", points: averagingPoints });
+    const kalmanPoints = kalmanFilter(originalPoints, 0.001);
+    // sections.push( { label: "Kalman", points: kalmanPoints});
+    const derivativePoints = derivativeFilter(averagingPoints);
+    // sections.push({ label: "Производная по kalman", points: derivativeFilter(kalmanPoints) });
+    const integralFilterPoints = integralFilter(kalmanPoints);
+    // sections.push( { label: "Integral", points: integralFilterPoints});
+
+    
+    // sections.push({ label: "Производная", points: derivativeFilter(originalPoints) });
+   
+    
 
 
-    // Добавляйте дополнительные секции здесь
-    // ...
-  
-    return visualDatasetBuilder(section1);
+    const labeledDataSets = sections.map(section => ({
+        label: `${section.label} - ${section.points.length}`,
+        points: section.points
+}));
+
+    return visualDatasetBuilder(...labeledDataSets);
+
 }
