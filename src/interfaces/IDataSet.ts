@@ -5,6 +5,7 @@ export interface IDataSet {
     data: IPoint[];
     borderColor: string; // Обязательное поле для цвета
     // Опциональные поля для дополнительных свойств визуализации
+    label?: string; // Опциональное свойство для названия датасета
     borderWidth?: number;
     pointBackgroundColor?: string;
     pointBorderColor?: string;

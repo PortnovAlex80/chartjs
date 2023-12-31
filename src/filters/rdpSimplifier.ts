@@ -1,6 +1,7 @@
 
 // src/utils/rdpSimplifier.ts
-  import { IPoint } from '../interfaces/IPoint';
+  import { IFilter } from '../interfaces/IFilter';
+import { IPoint } from '../interfaces/IPoint';
   
   /**
    * Упрощает маршрут с использованием алгоритма Рамера-Дугласа-Пекера.
@@ -9,7 +10,7 @@
    * @param {number} epsilon - Минимальное расстояние между точками.
    * @returns {IPoint[]} Упрощённый массив точек.
    */
-  function rdpSimplifier(points: IPoint[], epsilon: number): IPoint[] {
+  const rdpSimplifier: IFilter = (points: IPoint[], epsilon: number): IPoint[] => {
     const findMaxDistance = (points: IPoint[], startPoint: IPoint, endPoint: IPoint): { maxDistance: number; index: number } => {
       let maxDistance = 0;
       let index = 0;

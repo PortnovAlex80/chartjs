@@ -7,7 +7,7 @@
  */
 
 // src/utils/polylineGenerator.ts
-import { generateError } from './errorGenerator';
+import { generateError } from './errorGenerator.js';
 import { IPoint } from '../interfaces/IPoint';
 import {IVertex } from '../interfaces/IVertex'
 

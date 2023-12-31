@@ -1,12 +1,11 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 // src/utils/ChartDataAggregator.ts
-const polylineGenerator_1 = require("../sectiongenerators/polylineGenerator");
-const generateChartData_1 = require("../utils/generateChartData");
-function ChartDataAggregator() {
-    const originalPoints = (0, polylineGenerator_1.generatePolyline)();
+import { generatePolyline } from '../sectiongenerators/polylineGenerator.js';
+import visualDatasetBuilder from '../utils/generateChartData.js';
+import rdpSimplifier from '../filters/rdpSimplifier.js';
+export default function ChartDataAggregator() {
+    const section1 = generatePolyline();
+    const section2 = rdpSimplifier(section1, 0.25);
     // Добавляйте дополнительные секции здесь
     // ...
-    return (0, generateChartData_1.generateChartData)(originalPoints);
+    return visualDatasetBuilder(section1, section2);
 }
-exports.default = ChartDataAggregator;

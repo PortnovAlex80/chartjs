@@ -5,8 +5,8 @@ import { ExecException, exec } from 'child_process';
 import fs from 'fs';
 import { IDataSet } from './interfaces/IDataSet';
 import { IPoint } from './interfaces/IPoint'
-import ChartDataAggregator from './utils/ChartDataAggregator';
-import { formatPoint } from './utils/pointFormatter';
+import ChartDataAggregator from './utils/ChartDataAggregator.js';
+import { formatPoint } from './utils/pointFormatter.js';
 
 dotenv.config();
 const app = express();
@@ -14,9 +14,14 @@ const port = 3000;
 const csvFilePath = './data/data.csv';
 
 app.use(express.static('public'));
+app.use(express.static('dist'));
 
+
+console.log("SERVER START...")
 
 app.get('/data', (req: Request, res: Response) => {
+  console.log("GET DATA");
+
     if (fs.existsSync(csvFilePath) && !process.env.IGNORE_CSV) {
       const fileContent = fs.readFileSync(csvFilePath, 'utf8');
       if (fileContent.trim()) {
@@ -74,7 +79,7 @@ let browserProcess: any = null;
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
-  exec('/usr/bin/chromium --user-data-dir=/home/javascriptstation/Documents/Code/chartsjs/chromium-profile http://localhost:3000', (error: ExecException | null, stdout: string, stderr: string) => {
+  exec('/usr/bin/chromium --user-data-dir=./chromium-profile http://localhost:3000', (error: ExecException | null, stdout: string, stderr: string) => {
     if (error) {
       console.error(`Error launching browser: ${error.message}`);
       return;

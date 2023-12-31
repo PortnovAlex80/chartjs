@@ -1,23 +1,21 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
 // src/server.ts
-const dotenv_1 = __importDefault(require("dotenv"));
-const express_1 = __importDefault(require("express"));
-const child_process_1 = require("child_process");
-const fs_1 = __importDefault(require("fs"));
-const ChartDataAggregator_1 = __importDefault(require("./utils/ChartDataAggregator"));
-const pointFormatter_1 = require("./utils/pointFormatter");
-dotenv_1.default.config();
-const app = (0, express_1.default)();
+import dotenv from 'dotenv';
+import express from 'express';
+import { exec } from 'child_process';
+import fs from 'fs';
+import ChartDataAggregator from './utils/ChartDataAggregator.js';
+import { formatPoint } from './utils/pointFormatter.js';
+dotenv.config();
+const app = express();
 const port = 3000;
 const csvFilePath = './data/data.csv';
-app.use(express_1.default.static('public'));
+app.use(express.static('public'));
+app.use(express.static('dist'));
+console.log("SERVER START...");
 app.get('/data', (req, res) => {
-    if (fs_1.default.existsSync(csvFilePath) && !process.env.IGNORE_CSV) {
-        const fileContent = fs_1.default.readFileSync(csvFilePath, 'utf8');
+    console.log("GET DATA");
+    if (fs.existsSync(csvFilePath) && !process.env.IGNORE_CSV) {
+        const fileContent = fs.readFileSync(csvFilePath, 'utf8');
         if (fileContent.trim()) {
             try {
                 const dataSets = fileContent.trim().split('\n\n').map(datasetCsv => {
@@ -39,7 +37,7 @@ app.get('/data', (req, res) => {
         }
     }
     else {
-        const dataSets = (0, ChartDataAggregator_1.default)();
+        const dataSets = ChartDataAggregator();
         writeCsvAndRespond(dataSets, res);
     }
 });
@@ -48,13 +46,13 @@ function writeCsvAndRespond(dataSets, res) {
     dataSets.forEach(dataset => {
         csvData += `Color: ${dataset.borderColor}\n`;
         const datasetCsv = dataset.data.map(point => {
-            const formattedPoint = (0, pointFormatter_1.formatPoint)(point);
+            const formattedPoint = formatPoint(point);
             return `${formattedPoint.x},${formattedPoint.y}`;
         }).join('\n');
         csvData += datasetCsv + '\n\n';
     });
     csvData = csvData.trim();
-    fs_1.default.writeFile(csvFilePath, csvData, (err) => {
+    fs.writeFile(csvFilePath, csvData, (err) => {
         if (err) {
             console.error('Error writing file:', err);
             res.status(500).json({ error: 'Error writing file' });
@@ -67,7 +65,7 @@ function writeCsvAndRespond(dataSets, res) {
 let browserProcess = null;
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
-    (0, child_process_1.exec)('/usr/bin/chromium --user-data-dir=/home/javascriptstation/Documents/Code/chartsjs/chromium-profile http://localhost:3000', (error, stdout, stderr) => {
+    exec('/usr/bin/chromium --user-data-dir=./chromium-profile http://localhost:3000', (error, stdout, stderr) => {
         if (error) {
             console.error(`Error launching browser: ${error.message}`);
             return;

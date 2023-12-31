@@ -1,4 +1,3 @@
-"use strict";
 /**
  * Модуль для генерации полилиний. Создаёт последовательность точек на основе
  * массива вершин, где каждая вершина задаётся углом и длиной относительно
@@ -6,10 +5,8 @@
  *
  * @module polylineGenerator
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.generatePolyline = exports.generatePolylineWithVertices = void 0;
 // src/utils/polylineGenerator.ts
-const errorGenerator_1 = require("./errorGenerator");
+import { generateError } from './errorGenerator.js';
 /**
  * Захардкоженный массив вершин полилинии. Каждая вершина задаёт угол в градусах
  * и длину от предыдущей точки.
@@ -29,7 +26,7 @@ const vertices = [
  * @param {Function} errorFunction - Функция, генерирующая случайную погрешность.
  * @returns {IPoint[]} Массив сгенерированных точек полилинии.
  */
-function generatePolylineWithVertices(vertices, errorFunction) {
+export function generatePolylineWithVertices(vertices, errorFunction) {
     const points = [];
     let currentX = 0;
     let currentY = 0;
@@ -43,13 +40,11 @@ function generatePolylineWithVertices(vertices, errorFunction) {
     });
     return points;
 }
-exports.generatePolylineWithVertices = generatePolylineWithVertices;
 /**
 * Генерирует полилинию, используя предопределённые вершины и функцию погрешности.
 *
 * @returns {IPoint[]} Массив сгенерированных точек полилинии.
 */
-function generatePolyline() {
-    return generatePolylineWithVertices(vertices, errorGenerator_1.generateError);
+export function generatePolyline() {
+    return generatePolylineWithVertices(vertices, generateError);
 }
-exports.generatePolyline = generatePolyline;

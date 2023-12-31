@@ -7,7 +7,7 @@ function randomContrastColor(): string {
   return `hsl(${hue}, 100%, 50%)`; // 100% насыщенность и 50% светлость
 }
 
-export function generateChartData(...pointsArrays: IPoint[][]): IDataSet[] {
+export default function visualDatasetBuilder(...pointsArrays: IPoint[][]): IDataSet[] {
   return pointsArrays.map(points => {
     return {
       label: 'Полилиния',
@@ -18,3 +18,5 @@ export function generateChartData(...pointsArrays: IPoint[][]): IDataSet[] {
     };
   });
 }
+
+

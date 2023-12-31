@@ -1,5 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Упрощает маршрут с использованием алгоритма Рамера-Дугласа-Пекера.
  *
@@ -7,7 +5,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * @param {number} epsilon - Минимальное расстояние между точками.
  * @returns {IPoint[]} Упрощённый массив точек.
  */
-function rdpSimplifier(points, epsilon) {
+const rdpSimplifier = (points, epsilon) => {
     const findMaxDistance = (points, startPoint, endPoint) => {
         let maxDistance = 0;
         let index = 0;
@@ -45,5 +43,5 @@ function rdpSimplifier(points, epsilon) {
         }
     };
     return simplifySection(points, epsilon);
-}
-exports.default = rdpSimplifier;
+};
+export default rdpSimplifier;
