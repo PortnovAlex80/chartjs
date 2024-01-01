@@ -11,32 +11,54 @@ import integralFilter from '../filters/integralFilter.js';
 import lineSegmentFilter from '../filters/calculateLinearRegression.js';
 import { measureDistancesToPolyline } from '../filters/measureDistancesToPolyline.js';
 import  segmentAndApproximate  from '../filters/segmentAndApproximate.js';
+import splineFilter from '../filters/SplineFilter.js';
+import splitAndMergeFilter from '../filters/splitAndMergeFilter.js';
+import enhancedSegmentApproximation from '../filters/enhancedSegmentApproximation.js';
 
 export default function ChartDataAggregator(): IDataSet[] {
 
     const sections = [];    
 
     const originalPoints = generatePolyline();
-    sections.push({ label: "ТЛО", points: originalPoints });
-    const averagingPoints = averagingFilter(originalPoints, 2);
-    // sections.push({ label: "Сглаживание", points: averagingPoints });
-    const kalmanPoints = kalmanFilter(originalPoints, 0.001);
-    // sections.push( { label: "Kalman", points: kalmanPoints});
-    const derivativePoints = derivativeFilter(averagingPoints);
-    // sections.push({ label: "Производная по kalman", points: derivativeFilter(kalmanPoints) });
-    const integralFilterPoints = integralFilter(kalmanPoints);
-    const leastSquaresPoints = leastSquaresFilter(originalPoints);
-    // sections.push( { label: "Наим квадратов", points: leastSquaresPoints});
-
-    const measureDistancesPoints = measureDistancesToPolyline(leastSquaresPoints, originalPoints);
-    // sections.push( { label: "Отклонения от апроксим", points: measureDistancesPoints});
-    sections.push( { label: "Производная отклонений", points: derivativeFilter(measureDistancesPoints)});
-    // sections.push( { label: "Производная отклонений", points: kalmanFilter(derivativeFilter(measureDistancesPoints), 0.2)});
-    // sections.push( { label: "Производная отклонений", points: rdpSimplifier(averagingFilter(derivativeFilter(measureDistancesPoints), 1), 0.2)});
+    const splinePoints = (splineFilter(originalPoints));
+    const least_points = leastSquaresFilter(splinePoints, 1);
+    const distancePoints = measureDistancesToPolyline(least_points, splinePoints);
+    const derivativePoints = splineFilter(derivativeFilter(splineFilter(distancePoints)));
+    const segmentsPoints = segmentAndApproximate(splinePoints, 0.4);
+    const splitAndMergePoints = splitAndMergeFilter(originalPoints, 0.4);
+    const splitAndMergePointsSPlined = splitAndMergeFilter(splinePoints, 0.4);
+    const enhancedSegmentApproximationPoints = enhancedSegmentApproximation(originalPoints, 0.5);
+    
     
 
-    const segmentsPoints = segmentAndApproximate(originalPoints, 0.3);
-    sections.push( { label: "сегменты", points: segmentsPoints});
+    // sections.push({ label: "ТЛО", points: originalPoints });
+
+    // sections.push({ label: "LeastSQR", points: least_points });
+    // sections.push({ label: "spline", points: splinePoints });
+    // // sections.push({ label: "Shifts", points: distancePoints });
+    // sections.push({ label: "Derivative", points: derivativePoints });
+    // sections.push({ label: "Segments", points: segmentsPoints });
+    sections.push({ label: "Orig", points: splitAndMergePoints });
+    // sections.push({ label: "Splined", points: splitAndMergePointsSPlined });
+    sections.push({ label: "enhanced", points: enhancedSegmentApproximationPoints });
+    
+    
+    
+
+    
+
+    
+    // sections.push({ label: "ТЛО", points: originalPoints });
+    
+    
+
+    
+    
+
+
+
+    // const segmentsPoints = segmentAndApproximate(originalPoints, 0.3);
+    // sections.push( { label: "сегменты", points: segmentsPoints});
 
 
     

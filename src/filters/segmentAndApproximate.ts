@@ -28,24 +28,13 @@ function segmentAndApproximate(polylinePoints: IPoint[], epsilon: number): IPoin
             
                 let averageDerivative = derivativeWindow.reduce((a, b) => a + b, 0) / derivativeWindow.length;
 
-        console.log(`foreach index - ${index}`);
-        console.log(`Level - ${level}`);
-        console.log(`Y - ${derivativePoint.y}`);
-        console.log(`X - ${derivativePoint.x}`);
-        console.log(`checking - ${Math.abs(derivativePoint.y - Math.abs(level))}`);
              if (currentSegment.length === 0) {
             console.log("segment 0")
             currentSegment.push(polylinePoints[index]);
         } else {
-            if (Math.abs((derivativePoint.y) - Math.abs(level)) > epsilon) {
+            if (Math.abs((derivativePoint.y) - averageDerivative) > epsilon) {
             // Заканчиваем текущий сегмент и начинаем новый
-            console.log(`foreach index - ${index}`);
-            console.log("level up!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-            console.log(`Level - ${level}`);
-            console.log(`Y - ${derivativePoint.y}`);
-            console.log(`X - ${derivativePoint.x}`);
-            console.log(`checking - ${(Math.abs(derivativePoint.y) - Math.abs(level))}`);
-            
+         
             
             level = Math.abs(derivativePoint.y);
             currentSegment.push(polylinePoints[index]);
@@ -66,11 +55,10 @@ function segmentAndApproximate(polylinePoints: IPoint[], epsilon: number): IPoin
     }
     console.log(`Добавляем последний сегмент ${currentSegment.length}`);
 
-// Логируем количество сегментов и их содержимое
-console.log(`Количество сегментов: ${segments.length}`);
-segments.forEach((segment, idx) => {
-    console.log(`Сегмент ${idx}:`, segment.map(point => `(${point.x}, ${point.y})`).join(", "));
-});
+    // derivativePoints.forEach((point, index) => {
+    //     console.log(`Точка ${index}: x = ${point.x}, y = ${point.y}`);
+    // });
+    
 
 // Аппроксимация каждого сегмента и объединение результатов в один массив
 const approximatedPoints: IPoint[] = [];
