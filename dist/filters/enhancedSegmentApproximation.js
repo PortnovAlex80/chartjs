@@ -12,31 +12,55 @@ const findIntersection = (line1, line2) => {
     const y = line1.slope * x + line1.intercept;
     return { x, y };
 };
+const tryMergeSegments = (segment1, segment2, epsilon) => {
+    const combinedSegmentData = [...segment1, ...segment2];
+    const segmentLinePoints = leastSquaresFilter(combinedSegmentData);
+    const segmentLine = lineFromPoints(segmentLinePoints[0], segmentLinePoints[1]);
+    // Проверяем, удовлетворяют ли все точки условию погрешности
+    for (const point of combinedSegmentData) {
+        const projectedY = segmentLine.slope * point.x + segmentLine.intercept;
+        if (Math.abs(point.y - projectedY) > epsilon) {
+            return null; // Не удовлетворяет условию погрешности
+        }
+    }
+    return segmentLinePoints; // Удовлетворяет условию погрешности
+};
 // Функция для улучшенной аппроксимации сегментов
 const enhancedSegmentApproximation = (points, epsilon) => {
     const segmentsBoundaries = splitAndMergeFilter(points, epsilon);
     let enhancedSegments = [];
     let lastLine = null;
-    for (let i = 0; i < segmentsBoundaries.length - 1; i++) {
-        const segmentData = points.slice(points.indexOf(segmentsBoundaries[i]), points.indexOf(segmentsBoundaries[i + 1]) + 1);
+    let i = 0;
+    while (i < segmentsBoundaries.length - 1) {
+        let segmentData = points.slice(points.indexOf(segmentsBoundaries[i]), points.indexOf(segmentsBoundaries[i + 1]) + 1);
+        let nextSegmentCombined = false;
+        if (i < segmentsBoundaries.length - 2) {
+            // Попытка объединить текущий сегмент со следующим
+            const nextSegmentData = points.slice(points.indexOf(segmentsBoundaries[i + 1]), points.indexOf(segmentsBoundaries[i + 2]) + 1);
+            const mergedSegment = tryMergeSegments(segmentData, nextSegmentData, epsilon);
+            if (mergedSegment) {
+                segmentData = [...segmentData, ...nextSegmentData.slice(1)]; // Объединяем данные сегментов
+                nextSegmentCombined = true;
+            }
+        }
         // Применяем метод наименьших квадратов к сегменту
         const segmentLinePoints = leastSquaresFilter(segmentData, epsilon);
         const segmentLine = lineFromPoints(segmentLinePoints[0], segmentLinePoints[1]);
         if (i === 0) {
-            // Для первого сегмента добавляем его начальную точку
             enhancedSegments.push(segmentLinePoints[0]);
         }
         if (lastLine) {
-            // Находим пересечение с предыдущим сегментом
             const intersection = findIntersection(lastLine, segmentLine);
             enhancedSegments.push(intersection);
         }
-        // Сохраняем линию текущего сегмента для использования в следующей итерации
         lastLine = segmentLine;
+        if (nextSegmentCombined) {
+            i++; // Пропускаем следующий сегмент, так как он уже объединен
+        }
         if (i === segmentsBoundaries.length - 2) {
-            // Для последнего сегмента добавляем его конечную точку
             enhancedSegments.push(segmentLinePoints[1]);
         }
+        i++;
     }
     return enhancedSegments;
 };
