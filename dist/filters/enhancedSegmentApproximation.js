@@ -20,7 +20,7 @@ const enhancedSegmentApproximation = (points, epsilon) => {
     for (let i = 0; i < segmentsBoundaries.length - 1; i++) {
         const segmentData = points.slice(points.indexOf(segmentsBoundaries[i]), points.indexOf(segmentsBoundaries[i + 1]) + 1);
         // Применяем метод наименьших квадратов к сегменту
-        const segmentLinePoints = leastSquaresFilter(segmentData);
+        const segmentLinePoints = leastSquaresFilter(segmentData, epsilon);
         const segmentLine = lineFromPoints(segmentLinePoints[0], segmentLinePoints[1]);
         if (i === 0) {
             // Для первого сегмента добавляем его начальную точку
@@ -41,25 +41,3 @@ const enhancedSegmentApproximation = (points, epsilon) => {
     return enhancedSegments;
 };
 export default enhancedSegmentApproximation;
-// const enhancedSegmentApproximation: IFilter = (points: IPoint[], epsilon: number): IPoint[] => {
-//     const segmentsBoundaries = splitAndMergeFilter(points, epsilon);
-//     let enhancedSegments: IPoint[] = [];
-//     for (let i = 0; i < segmentsBoundaries.length - 1; i++) {
-//         // Восстанавливаем исходные данные для текущего сегмента
-//         const startIndex = points.indexOf(segmentsBoundaries[i]);
-//         const endIndex = points.indexOf(segmentsBoundaries[i + 1]) + 1;
-//         let segmentData = points.slice(startIndex, endIndex);
-//         // Удаляем граничные точки сегмента, если это возможно (оставляем минимум 2 точки для аппроксимации)
-//         if (segmentData.length > 3) {
-//             segmentData = segmentData.slice(1, -1);
-//         }
-//         // Применяем метод наименьших квадратов к сегменту
-//         const segmentLinePoints = leastSquaresFilter(segmentData, epsilon);
-//         // Добавляем полученные точки в результат
-//         enhancedSegments.push(...segmentLinePoints);
-//         // Добавляем границу текущего сегмента
-//         if (i < segmentsBoundaries.length - 2) {
-//             enhancedSegments.push(points[endIndex - 1]);
-//         }
-//     }
-//     return enhancedSegments;

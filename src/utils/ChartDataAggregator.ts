@@ -27,11 +27,12 @@ export default function ChartDataAggregator(): IDataSet[] {
     const segmentsPoints = segmentAndApproximate(splinePoints, 0.4);
     const splitAndMergePoints = splitAndMergeFilter(originalPoints, 0.4);
     const splitAndMergePointsSPlined = splitAndMergeFilter(splinePoints, 0.4);
-    const enhancedSegmentApproximationPoints = enhancedSegmentApproximation(originalPoints, 0.5);
+    const enhancedSegmentApproximationPoints = enhancedSegmentApproximation(originalPoints, 0.1);
+    const shiftpoints = measureDistancesToPolyline(enhancedSegmentApproximationPoints, originalPoints)
     
     
 
-    sections.push({ label: "ТЛО", points: originalPoints });
+    // sections.push({ label: "ТЛО", points: originalPoints });
 // 
     // sections.push({ label: "LeastSQR", points: least_points });
     // sections.push({ label: "spline", points: splinePoints });
@@ -41,6 +42,8 @@ export default function ChartDataAggregator(): IDataSet[] {
     // sections.push({ label: "Orig", points: splitAndMergePoints });
     // sections.push({ label: "Splined", points: splitAndMergePointsSPlined });
     sections.push({ label: "enhanced", points: enhancedSegmentApproximationPoints });
+    sections.push({ label: "shift", points: shiftpoints });
+    
     
     
     

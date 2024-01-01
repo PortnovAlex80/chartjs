@@ -17,17 +17,19 @@ export default function ChartDataAggregator() {
     const segmentsPoints = segmentAndApproximate(splinePoints, 0.4);
     const splitAndMergePoints = splitAndMergeFilter(originalPoints, 0.4);
     const splitAndMergePointsSPlined = splitAndMergeFilter(splinePoints, 0.4);
-    const enhancedSegmentApproximationPoints = enhancedSegmentApproximation(originalPoints, 0.5);
-    sections.push({ label: "ТЛО", points: originalPoints });
+    const enhancedSegmentApproximationPoints = enhancedSegmentApproximation(originalPoints, 0.1);
+    const shiftpoints = measureDistancesToPolyline(enhancedSegmentApproximationPoints, originalPoints);
+    // sections.push({ label: "ТЛО", points: originalPoints });
     // 
     // sections.push({ label: "LeastSQR", points: least_points });
     // sections.push({ label: "spline", points: splinePoints });
     // // sections.push({ label: "Shifts", points: distancePoints });
     // sections.push({ label: "Derivative", points: derivativePoints });
     // sections.push({ label: "Segments", points: segmentsPoints });
-    sections.push({ label: "Orig", points: splitAndMergePoints });
+    // sections.push({ label: "Orig", points: splitAndMergePoints });
     // sections.push({ label: "Splined", points: splitAndMergePointsSPlined });
     sections.push({ label: "enhanced", points: enhancedSegmentApproximationPoints });
+    sections.push({ label: "shift", points: shiftpoints });
     // sections.push({ label: "ТЛО", points: originalPoints });
     // const segmentsPoints = segmentAndApproximate(originalPoints, 0.3);
     // sections.push( { label: "сегменты", points: segmentsPoints});
