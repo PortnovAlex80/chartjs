@@ -18,7 +18,8 @@ export default function ChartDataAggregator() {
     const splitAndMergePoints = splitAndMergeFilter(originalPoints, 0.4);
     const splitAndMergePointsSPlined = splitAndMergeFilter(splinePoints, 0.4);
     const enhancedSegmentApproximationPoints = enhancedSegmentApproximation(originalPoints, 0.5);
-    // sections.push({ label: "ТЛО", points: originalPoints });
+    sections.push({ label: "ТЛО", points: originalPoints });
+    // 
     // sections.push({ label: "LeastSQR", points: least_points });
     // sections.push({ label: "spline", points: splinePoints });
     // // sections.push({ label: "Shifts", points: distancePoints });

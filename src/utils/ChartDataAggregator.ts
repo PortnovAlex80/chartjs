@@ -31,14 +31,14 @@ export default function ChartDataAggregator(): IDataSet[] {
     
     
 
-    // sections.push({ label: "ТЛО", points: originalPoints });
-
+    sections.push({ label: "ТЛО", points: originalPoints });
+// 
     // sections.push({ label: "LeastSQR", points: least_points });
     // sections.push({ label: "spline", points: splinePoints });
     // // sections.push({ label: "Shifts", points: distancePoints });
     // sections.push({ label: "Derivative", points: derivativePoints });
     // sections.push({ label: "Segments", points: segmentsPoints });
-    sections.push({ label: "Orig", points: splitAndMergePoints });
+    // sections.push({ label: "Orig", points: splitAndMergePoints });
     // sections.push({ label: "Splined", points: splitAndMergePointsSPlined });
     sections.push({ label: "enhanced", points: enhancedSegmentApproximationPoints });
     
