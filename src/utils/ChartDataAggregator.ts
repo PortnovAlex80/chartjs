@@ -15,26 +15,28 @@ import splineFilter from '../filters/SplineFilter.js';
 import splitAndMergeFilter from '../filters/splitAndMergeFilter.js';
 import enhancedSegmentApproximation from '../filters/enhancedSegmentApproximation.js';
 import chaikinsSmoothingFilter from '../filters/chaikinsSmoothingFilter.js';
+import { IPoint } from '../interfaces/IPoint';
+import orderByXFilter from '../filters/orderByXFilter.js';
 
-export default function ChartDataAggregator(): IDataSet[] {
+export default function ChartDataAggregator(csvpoints: IPoint[]): IDataSet[] {
 
-    const sections = [];    
-
-    const originalPoints = generatePolyline();
-    const splinePoints = (splineFilter(originalPoints));
-    const chaikinsSmoothingFilterPoints = chaikinsSmoothingFilter(originalPoints, 5);
-    const least_points = leastSquaresFilter(splinePoints, 1);
-    const distancePoints = measureDistancesToPolyline(least_points, splinePoints);
-    const derivativePoints = splineFilter(derivativeFilter(splineFilter(distancePoints)));
-    const segmentsPoints = segmentAndApproximate(splinePoints, 0.4);
-    const splitAndMergePoints = splitAndMergeFilter(originalPoints, 0.4);
-    const splitAndMergePointsSPlined = splitAndMergeFilter(splinePoints, 0.4);
-    const enhancedSegmentApproximationPoints = enhancedSegmentApproximation(originalPoints, 0.50);
-    const shiftpoints = measureDistancesToPolyline(enhancedSegmentApproximationPoints, originalPoints)
+    const sections = [];   
+    const orderByXPoints = orderByXFilter(csvpoints); 
+    // const originalPoints = generatePolyline();
+    // const splinePoints = (splineFilter(csvpoints));
+    // const chaikinsSmoothingFilterPoints = chaikinsSmoothingFilter(originalPoints, 5);
+    // const least_points = leastSquaresFilter(splinePoints, 1);
+    // const distancePoints = measureDistancesToPolyline(least_points, splinePoints);
+    // const derivativePoints = splineFilter(derivativeFilter(splineFilter(distancePoints)));
+    // const segmentsPoints = segmentAndApproximate(splinePoints, 0.4);
+    // const splitAndMergePoints = splitAndMergeFilter(originalPoints, 0.4);
+    // const splitAndMergePointsSPlined = splitAndMergeFilter(splinePoints, 0.4);
+    const enhancedSegmentApproximationPoints = enhancedSegmentApproximation(orderByXPoints, 0.3);
+    // const shiftpoints = measureDistancesToPolyline(enhancedSegmentApproximationPoints, csvpoints)
     
     
 
-    // sections.push({ label: "ТЛО", points: originalPoints });
+    sections.push({ label: "ТЛО", points: csvpoints });
 // 
     // sections.push({ label: "LeastSQR", points: least_points });
     // sections.push({ label: "spline", points: splinePoints });
@@ -43,34 +45,10 @@ export default function ChartDataAggregator(): IDataSet[] {
     // // sections.push({ label: "Shifts", points: distancePoints });
     // sections.push({ label: "Derivative", points: derivativePoints });
     // sections.push({ label: "Segments", points: segmentsPoints });
-    sections.push({ label: "Orig", points: splitAndMergePoints });
+    // sections.push({ label: "Orig", points: splitAndMergePoints });
     // sections.push({ label: "Splined", points: splitAndMergePointsSPlined });
     sections.push({ label: "enhanced", points: enhancedSegmentApproximationPoints });
-    // sections.push({ label: "shift", points: shiftpoints });
-    
-    
-    
-    
-
-    
-
-    
-    // sections.push({ label: "ТЛО", points: originalPoints });
-    
-    
-
-    
-    
-
-
-
-    // const segmentsPoints = segmentAndApproximate(originalPoints, 0.3);
-    // sections.push( { label: "сегменты", points: segmentsPoints});
-
-
-    
-    // sections.push({ label: "Производная", points: derivativeFilter(originalPoints) });
-   
+ 
     
 
 

@@ -14,6 +14,7 @@ async function loadData() {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
+    console.log(`Длина данных ${data.length}`)
 
     const chartType: string = "scatter"; // 'line'-'scatter'
 

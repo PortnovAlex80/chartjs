@@ -14,11 +14,12 @@ app.use(express.static('dist'));
 console.log("SERVER START...");
 app.get('/data', (req, res) => {
     console.log("GET DATA");
-    if (fs.existsSync(csvFilePath) && !process.env.IGNORE_CSV) {
+    if (fs.existsSync(csvFilePath)) {
         const fileContent = fs.readFileSync(csvFilePath, 'utf8');
         if (fileContent.trim()) {
             try {
-                const dataSets = fileContent.trim().split('\n\n').map(datasetCsv => {
+                const dataSets = [];
+                fileContent.trim().split('\n\n').forEach(datasetCsv => {
                     const lines = datasetCsv.trim().split('\n');
                     const colorLine = lines.shift();
                     const color = colorLine && colorLine.startsWith('Color:') ? colorLine.split(':')[1].trim() : 'rgb(0, 0, 0)';
@@ -26,8 +27,12 @@ app.get('/data', (req, res) => {
                         const [x, y] = row.split(',').map(value => parseFloat(value));
                         return { x, y };
                     });
-                    return { data: points, borderColor: color };
+                    // Обработка точек через ChartDataAggregator и добавление в dataSets
+                    const processedDataSets = ChartDataAggregator(points);
+                    // processedDataSets.forEach(ds => dataSets.push({ ...ds, borderColor: color }));
+                    processedDataSets.forEach(ds => dataSets.push(Object.assign({}, ds)));
                 });
+                console.log('Data successfully loaded from CSV file');
                 res.json(dataSets);
             }
             catch (error) {
@@ -37,8 +42,9 @@ app.get('/data', (req, res) => {
         }
     }
     else {
-        const dataSets = ChartDataAggregator();
-        writeCsvAndRespond(dataSets, res);
+        // Логика для случая отсутствия CSV файла
+        // Например, можно вернуть пустой массив или сгенерировать тестовые данные
+        res.json([]);
     }
 });
 function writeCsvAndRespond(dataSets, res) {

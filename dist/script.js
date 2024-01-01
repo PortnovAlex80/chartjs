@@ -19,6 +19,7 @@ function loadData() {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = yield response.json();
+            console.log(`Длина данных ${data.length}`);
             const chartType = "scatter"; // 'line'-'scatter'
             let chartData;
             switch (chartType) {

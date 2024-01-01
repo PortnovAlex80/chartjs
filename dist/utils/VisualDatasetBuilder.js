@@ -9,7 +9,8 @@ export default function visualDatasetBuilder(...labeledDataSets) {
             data: points.map(point => ({ x: point.x, y: point.y })),
             borderColor: randomContrastColor(),
             borderWidth: 2,
-            fill: false,
+            fill: true,
+            showLine: false
         };
     });
 }

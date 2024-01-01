@@ -22,34 +22,43 @@ console.log("SERVER START...")
 app.get('/data', (req: Request, res: Response) => {
   console.log("GET DATA");
 
-    if (fs.existsSync(csvFilePath) && !process.env.IGNORE_CSV) {
-      const fileContent = fs.readFileSync(csvFilePath, 'utf8');
-      if (fileContent.trim()) {
-        try {
-          const dataSets: IDataSet[] = fileContent.trim().split('\n\n').map(datasetCsv => {
-            const lines = datasetCsv.trim().split('\n');
-            const colorLine = lines.shift();
-            const color = colorLine && colorLine.startsWith('Color:') ? colorLine.split(':')[1].trim() : 'rgb(0, 0, 0)';
-  
-            const points: IPoint[] = lines.map(row => {
-              const [x, y] = row.split(',').map(value => parseFloat(value));
-              return { x, y };
-            });
-  
-            return { data: points, borderColor: color };
+  if (fs.existsSync(csvFilePath)) {
+    const fileContent = fs.readFileSync(csvFilePath, 'utf8');
+    if (fileContent.trim()) {
+      try {
+        const dataSets: IDataSet[] = [];
+
+        fileContent.trim().split('\n\n').forEach(datasetCsv => {
+          const lines = datasetCsv.trim().split('\n');
+          const colorLine = lines.shift();
+          const color = colorLine && colorLine.startsWith('Color:') ? colorLine.split(':')[1].trim() : 'rgb(0, 0, 0)';
+
+          const points: IPoint[] = lines.map(row => {
+            const [x, y] = row.split(',').map(value => parseFloat(value));
+            return { x, y };
           });
-  
-          res.json(dataSets);
-        } catch (error) {
-          console.error('Error processing CSV data:', error);
-          res.status(500).json({ error: 'Error processing CSV data' });
-        }
+
+          // Обработка точек через ChartDataAggregator и добавление в dataSets
+          const processedDataSets = ChartDataAggregator(points);
+          // processedDataSets.forEach(ds => dataSets.push({ ...ds, borderColor: color }));
+          processedDataSets.forEach(ds => dataSets.push({ ...ds }));
+          
+        });
+
+        console.log('Data successfully loaded from CSV file');
+        res.json(dataSets);
+      } catch (error) {
+        console.error('Error processing CSV data:', error);
+        res.status(500).json({ error: 'Error processing CSV data' });
       }
-    } else {
-      const dataSets = ChartDataAggregator();
-      writeCsvAndRespond(dataSets, res);
     }
-  });
+  } else {
+    // Логика для случая отсутствия CSV файла
+    // Например, можно вернуть пустой массив или сгенерировать тестовые данные
+    res.json([]);
+  }
+});
+
   
   function writeCsvAndRespond(dataSets: IDataSet[], res: Response) {
     let csvData = '';
