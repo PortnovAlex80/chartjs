@@ -17,45 +17,52 @@ import enhancedSegmentApproximation from '../filters/enhancedSegmentApproximatio
 import chaikinsSmoothingFilter from '../filters/chaikinsSmoothingFilter.js';
 import { IPoint } from '../interfaces/IPoint';
 import orderByXFilter from '../filters/orderByXFilter.js';
+import filterXRange from '../filters/filterXRange.js';
+import sortAndRemoveDuplicates from '../filters/sortAndRemoveDuplicates.js';
+import splineFilterAsync from '../filters/asyncSpline.js';
+import splineFilterAsync10000 from '../filters/asyncSpline10000.js';
+import windowedLeastSquaresFilter from '../filters/windowedLeastSquaresFilter.js';
+import leastSquaresWeightedFilter from '../filters/leastSquaresWeightedFilter.js';
 
-export default function ChartDataAggregator(csvpoints: IPoint[]): IDataSet[] {
+export default async function ChartDataAggregator(csvpoints: IPoint[]): Promise<IDataSet[]> {
 
     const sections = [];   
     const orderByXPoints = orderByXFilter(csvpoints); 
+    const rangedPoints = filterXRange(orderByXPoints, 70, 73
+        );
     // const originalPoints = generatePolyline();
-    // const splinePoints = (splineFilter(csvpoints));
-    // const chaikinsSmoothingFilterPoints = chaikinsSmoothingFilter(originalPoints, 5);
-    // const least_points = leastSquaresFilter(splinePoints, 1);
-    // const distancePoints = measureDistancesToPolyline(least_points, splinePoints);
-    // const derivativePoints = splineFilter(derivativeFilter(splineFilter(distancePoints)));
-    // const segmentsPoints = segmentAndApproximate(splinePoints, 0.4);
-    // const splitAndMergePoints = splitAndMergeFilter(originalPoints, 0.4);
-    // const splitAndMergePointsSPlined = splitAndMergeFilter(splinePoints, 0.4);
-    const enhancedSegmentApproximationPoints = enhancedSegmentApproximation(orderByXPoints, 0.3);
-    // const shiftpoints = measureDistancesToPolyline(enhancedSegmentApproximationPoints, csvpoints)
-    
-    
+    const splinePoints = (splineFilter(rangedPoints));
+    const cubicSpline = await splineFilterAsync(sortAndRemoveDuplicates(rangedPoints));
+    const cubicSpline10000 = await splineFilterAsync10000(sortAndRemoveDuplicates(rangedPoints));
 
-    sections.push({ label: "ТЛО", points: csvpoints });
-// 
-    // sections.push({ label: "LeastSQR", points: least_points });
-    // sections.push({ label: "spline", points: splinePoints });
-    // sections.push({ label: "chaikins", points: chaikinsSmoothingFilterPoints });
+    // Окна 1 м 
+    const windowsLSFPoints = windowedLeastSquaresFilter(sortAndRemoveDuplicates(rangedPoints));
     
-    // // sections.push({ label: "Shifts", points: distancePoints });
-    // sections.push({ label: "Derivative", points: derivativePoints });
-    // sections.push({ label: "Segments", points: segmentsPoints });
-    // sections.push({ label: "Orig", points: splitAndMergePoints });
-    // sections.push({ label: "Splined", points: splitAndMergePointsSPlined });
-    sections.push({ label: "enhanced", points: enhancedSegmentApproximationPoints });
+    // const chaikinsSmoothingFilterPoints = chaikinsSmoothingFilter(originalPoints, 5);
+    const enhancedSegmentApproximationPoints = enhancedSegmentApproximation((cubicSpline), 0.05);
+    // const shiftpoints = measureDistancesToPolyline(enhancedSegmentApproximationPoints, csvpoints)
+    const splitAndMergePoints = splitAndMergeFilter(cubicSpline, 1); 
+    const linearAppr = leastSquaresFilter(rangedPoints);
+    
+    sections.push({ label: "ТЛО",      points: rangedPoints, showLine:false, backgroundColor: 'grey'});
+    sections.push({ label: "Сглаж ТЛО",      points: cubicSpline, showLine:false, backgroundColor: 'green'});
+    sections.push({ label: "windowsLSFPoints ТЛО",      points: windowsLSFPoints, showLine:true, fill: false, backgroundColor: 'yellow'});
+    // sections.push({ label: "Сорт ТЛО",      points: (sortAndRemoveDuplicates(rangedPoints)), showLine:false, backgroundColor: 'green'});
+    
+    sections.push({ label: "enhanced", points: enhancedSegmentApproximationPoints, showLine: true, tension: 0, fill: false, borderColor: 'red', backgroundColor: 'red' });
+    sections.push({ label: "LeastSQR", points: linearAppr, showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
+    sections.push({ label: "LeastWeightSQR", points: leastSquaresWeightedFilter(rangedPoints), showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
+ 
+    // sections.push({ label: "RDP", points: rdpSimplifier(sortAndRemoveDuplicates(rangedPoints), 0.1), showLine: true, tension: 0, fill: false, borderColor: 'red', backgroundColor: 'red' });
  
     
-
-
-    const labeledDataSets = sections.map(section => ({
-        label: `${section.label} - ${section.points.length}`,
-        points: section.points
-}));
+    const labeledDataSets = sections.map(section => {
+        return {
+            data: section.points,
+                ...section,
+                label: `${section.label} - ${section.points.length}`
+        };
+    });
 
     return visualDatasetBuilder(...labeledDataSets);
 

@@ -1,17 +1,24 @@
 import { IPoint } from '../interfaces/IPoint';
 import { IFilter } from '../interfaces/IFilter';
-import Spline from 'cubic-spline-ts';
-
-
+import sortAndRemoveDuplicates from './sortAndRemoveDuplicates.js';
+import { CubicSpline } from '../utils/CubicSpline.js'; 
+import { removeOutliersFilter } from './removeOutliersFilter.js';
+import smoothingSpline from '@umn-latis/simple-smoothing-spline';
 
 const splineFilter: IFilter = (points: IPoint[]): IPoint[] => {
     if (points.length < 2) {
         return points; // Not enough points to form a spline
     }
+    
+    
 
+    points = sortAndRemoveDuplicates(points);
+    // points = removeOutliersFilter(points);
+    const cubicSpline = smoothingSpline(points, {type: 'cubic'}); 
+    
     const xs = points.map(p => p.x);
     const ys = points.map(p => p.y);
-    const spline = new Spline(xs, ys); // Create a new Spline object
+    const spline = new CubicSpline(xs, ys); // Create a new Spline object
 
     const interpolatedPoints: IPoint[] = [];
 
@@ -20,12 +27,13 @@ const splineFilter: IFilter = (points: IPoint[]): IPoint[] => {
     const xMax = points[points.length - 1].x;
     const step = (xMax - xMin) / (points.length - 1);
 
-    for (let x = xMin; x <= xMax; x += step) {
+    for (let x = xMin; x <= xMax; x += 0.005) {
         interpolatedPoints.push({ x, y: spline.at(x) });
     }
 
     return interpolatedPoints;
 };
+
 
 export default splineFilter;
 

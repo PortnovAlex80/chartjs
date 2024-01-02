@@ -2,6 +2,7 @@ import { IPoint } from '../interfaces/IPoint';
 import { IFilter } from '../interfaces/IFilter';
 import splitAndMergeFilter from './splitAndMergeFilter.js';
 import leastSquaresFilter from './leastSquaresFilter.js';
+import leastSquaresWeightedFilter from './leastSquaresWeightedFilter.js';
 
 // Функция для преобразования двух точек в объект с наклоном и пересечением
 const lineFromPoints = (pointA: IPoint, pointB: IPoint): { slope: number; intercept: number } => {
@@ -63,7 +64,7 @@ const enhancedSegmentApproximation: IFilter = (points: IPoint[], epsilon: number
         }
 
         // Применяем метод наименьших квадратов к сегменту
-        const segmentLinePoints = leastSquaresFilter(segmentData, epsilon);
+        const segmentLinePoints = leastSquaresWeightedFilter(segmentData, epsilon);
         const segmentLine = lineFromPoints(segmentLinePoints[0], segmentLinePoints[1]);
 
         if (i === 0) {

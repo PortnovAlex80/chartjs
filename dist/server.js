@@ -1,3 +1,12 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 // src/server.ts
 import dotenv from 'dotenv';
 import express from 'express';
@@ -12,14 +21,14 @@ const csvFilePath = './data/data.csv';
 app.use(express.static('public'));
 app.use(express.static('dist'));
 console.log("SERVER START...");
-app.get('/data', (req, res) => {
+app.get('/data', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("GET DATA");
     if (fs.existsSync(csvFilePath)) {
         const fileContent = fs.readFileSync(csvFilePath, 'utf8');
         if (fileContent.trim()) {
             try {
                 const dataSets = [];
-                fileContent.trim().split('\n\n').forEach(datasetCsv => {
+                for (const datasetCsv of fileContent.trim().split('\n\n')) {
                     const lines = datasetCsv.trim().split('\n');
                     const colorLine = lines.shift();
                     const color = colorLine && colorLine.startsWith('Color:') ? colorLine.split(':')[1].trim() : 'rgb(0, 0, 0)';
@@ -28,10 +37,9 @@ app.get('/data', (req, res) => {
                         return { x, y };
                     });
                     // Обработка точек через ChartDataAggregator и добавление в dataSets
-                    const processedDataSets = ChartDataAggregator(points);
-                    // processedDataSets.forEach(ds => dataSets.push({ ...ds, borderColor: color }));
+                    const processedDataSets = yield ChartDataAggregator(points);
                     processedDataSets.forEach(ds => dataSets.push(Object.assign({}, ds)));
-                });
+                }
                 console.log('Data successfully loaded from CSV file');
                 res.json(dataSets);
             }
@@ -46,7 +54,7 @@ app.get('/data', (req, res) => {
         // Например, можно вернуть пустой массив или сгенерировать тестовые данные
         res.json([]);
     }
-});
+}));
 function writeCsvAndRespond(dataSets, res) {
     let csvData = '';
     dataSets.forEach(dataset => {

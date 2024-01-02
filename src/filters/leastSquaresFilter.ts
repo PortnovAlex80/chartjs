@@ -1,7 +1,7 @@
 import { IPoint } from '../interfaces/IPoint';
 import { IFilter } from '../interfaces/IFilter';
 
-const leastSquaresFilter: IFilter = (points: IPoint[], epsilon: number): IPoint[] => {
+const leastSquaresFilter: IFilter = (points: IPoint[]): IPoint[] => {
     const leastSquaresLine = (points: IPoint[]): { slope: number; intercept: number } => {
         let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
         const n = points.length;

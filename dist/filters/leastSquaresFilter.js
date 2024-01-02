@@ -1,4 +1,4 @@
-const leastSquaresFilter = (points, epsilon) => {
+const leastSquaresFilter = (points) => {
     const leastSquaresLine = (points) => {
         let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
         const n = points.length;

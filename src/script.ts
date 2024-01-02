@@ -42,10 +42,9 @@ async function loadData() {
 
     new Chart(ctx, {
       type: chartType,
-      data: chartData,
-      options: {
-      },
+      data: chartData
     });
+    
   } catch (error) {
     console.error('Ошибка загрузки данных:', error);
   }

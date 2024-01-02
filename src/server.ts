@@ -19,7 +19,7 @@ app.use(express.static('dist'));
 
 console.log("SERVER START...")
 
-app.get('/data', (req: Request, res: Response) => {
+app.get('/data', async (req: Request, res: Response) => {
   console.log("GET DATA");
 
   if (fs.existsSync(csvFilePath)) {
@@ -28,7 +28,7 @@ app.get('/data', (req: Request, res: Response) => {
       try {
         const dataSets: IDataSet[] = [];
 
-        fileContent.trim().split('\n\n').forEach(datasetCsv => {
+        for (const datasetCsv of fileContent.trim().split('\n\n')) {
           const lines = datasetCsv.trim().split('\n');
           const colorLine = lines.shift();
           const color = colorLine && colorLine.startsWith('Color:') ? colorLine.split(':')[1].trim() : 'rgb(0, 0, 0)';
@@ -39,12 +39,9 @@ app.get('/data', (req: Request, res: Response) => {
           });
 
           // Обработка точек через ChartDataAggregator и добавление в dataSets
-          const processedDataSets = ChartDataAggregator(points);
-          // processedDataSets.forEach(ds => dataSets.push({ ...ds, borderColor: color }));
+          const processedDataSets = await ChartDataAggregator(points);
           processedDataSets.forEach(ds => dataSets.push({ ...ds }));
-          
-        });
-
+        }
         console.log('Data successfully loaded from CSV file');
         res.json(dataSets);
       } catch (error) {

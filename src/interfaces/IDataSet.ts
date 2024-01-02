@@ -3,7 +3,7 @@ import { IPoint } from "./IPoint";
 
 export interface IDataSet {
     data: IPoint[];
-    borderColor: string; // Обязательное поле для цвета
+    borderColor?: string; // Обязательное поле для цвета
     // Опциональные поля для дополнительных свойств визуализации
     label?: string; // Опциональное свойство для названия датасета
     borderWidth?: number;
@@ -13,5 +13,6 @@ export interface IDataSet {
     fill?: boolean;
     tension?: number;
     showLine?: boolean;
-    // ... другие опциональные свойства ...
+    
+    // ... другие опциональные свойства ...}
   }
