@@ -6,7 +6,7 @@ const leastSquaresWeightedFilter: IFilter = (points: IPoint[]): IPoint[] => {
         return points;
     }
     // Критерий, при котором вес обнуляется
-    const threshold = 0.25
+    const threshold = 0.15
     ;
 
     const calculateDistance = (point: IPoint, slope: number, intercept: number): number => {
@@ -76,8 +76,25 @@ if (thirdFilteredPoints.length > 1) {
     const lastPoint = points[points.length - 1];
     const approximatedFirstPoint = { x: firstPoint.x, y: firstPoint.x * slope + intercept };
     const approximatedLastPoint = { x: lastPoint.x, y: lastPoint.x * slope + intercept };
+    
+        // Вычисление аппроксимированных точек
+        let approximatedPoints = points.map(point => ({
+            x: point.x,
+            y: point.x * slope + intercept
+        }));
 
+    // console.log(`RMSE Least- ${calculateRMSELeastSquaresWeighted (points, approximatedPoints)}`);
     return [approximatedFirstPoint, approximatedLastPoint];
 };
 
+function calculateRMSELeastSquaresWeighted(originalPoints: IPoint[], approximatedPoints: IPoint[]): number {
+    let sumOfSquares = originalPoints.reduce((sum, point, index) => {
+        let approxPoint = approximatedPoints[index];
+        let diff = point.y - approxPoint.y;
+        return sum + diff * diff;
+    }, 0);
+    return Math.sqrt(sumOfSquares / originalPoints.length);
+}
+
 export default leastSquaresWeightedFilter;
+

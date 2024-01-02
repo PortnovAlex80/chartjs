@@ -5,7 +5,7 @@ import leastSquaresWeightedFilter from './leastSquaresWeightedFilter.js';
 const lineFromPoints = (pointA, pointB) => {
     const slope = (pointB.y - pointA.y) / (pointB.x - pointA.x);
     const intercept = pointA.y - slope * pointA.x;
-    return { slope, intercept };
+    return { slope, intercept, endPoint: pointB };
 };
 // Функция для нахождения пересечения двух линий, определенных их коэффициентами
 const findIntersection = (line1, line2) => {
@@ -13,6 +13,9 @@ const findIntersection = (line1, line2) => {
     const y = line1.slope * x + line1.intercept;
     return { x, y };
 };
+function isIntersectionValid(intersection, segment1End, segment2Start) {
+    return intersection.x > segment1End.x && intersection.x < segment2Start.x;
+}
 const tryMergeSegments = (segment1, segment2, epsilon) => {
     const combinedSegmentData = [...segment1, ...segment2];
     const segmentLinePoints = leastSquaresFilter(combinedSegmentData);
@@ -28,6 +31,7 @@ const tryMergeSegments = (segment1, segment2, epsilon) => {
 };
 // Функция для улучшенной аппроксимации сегментов
 const enhancedSegmentApproximation = (points, epsilon) => {
+    // const segmentsBoundaries = enhancedSplitAndMergeFilter(points, epsilon);
     const segmentsBoundaries = splitAndMergeFilter(points, epsilon);
     let enhancedSegments = [];
     let lastLine = null;
@@ -52,7 +56,16 @@ const enhancedSegmentApproximation = (points, epsilon) => {
         }
         if (lastLine) {
             const intersection = findIntersection(lastLine, segmentLine);
-            enhancedSegments.push(intersection);
+            if (isIntersectionValid(intersection, lastLine.endPoint, segmentLinePoints[0])) {
+                enhancedSegments.push(intersection);
+            }
+            else {
+                // Усреднение
+                enhancedSegments.push({
+                    x: (lastLine.endPoint.x + segmentLinePoints[0].x) / 2,
+                    y: (lastLine.endPoint.y + segmentLinePoints[0].y) / 2
+                });
+            }
         }
         lastLine = segmentLine;
         if (nextSegmentCombined) {

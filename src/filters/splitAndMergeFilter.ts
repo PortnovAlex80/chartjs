@@ -40,8 +40,6 @@ const splitAndMergeFilter: IFilter = (points: IPoint[], epsilon: number): IPoint
         if (perpendicularDistance(points[start], points[end], points[furthestIndex]) > epsilon) {
             let firstSegment = split(points, start, furthestIndex);
             let secondSegment = split(points, furthestIndex, end);
-            let lastPointFirstSegment = firstSegment[firstSegment.length - 1];
-            let firstPointSecondSegment = secondSegment[0];
 
             // Попытка слияния
             if (canMergeSegments(firstSegment, secondSegment, epsilon)) {

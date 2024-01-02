@@ -3,12 +3,13 @@ import { IFilter } from '../interfaces/IFilter';
 import splitAndMergeFilter from './splitAndMergeFilter.js';
 import leastSquaresFilter from './leastSquaresFilter.js';
 import leastSquaresWeightedFilter from './leastSquaresWeightedFilter.js';
+import enhancedSplitAndMergeFilter from './enhancedSplitAndMergeFilter.js';
 
 // Функция для преобразования двух точек в объект с наклоном и пересечением
-const lineFromPoints = (pointA: IPoint, pointB: IPoint): { slope: number; intercept: number } => {
+const lineFromPoints = (pointA: IPoint, pointB: IPoint): { slope: number; intercept: number,  endPoint: IPoint } => {
     const slope = (pointB.y - pointA.y) / (pointB.x - pointA.x);
     const intercept = pointA.y - slope * pointA.x;
-    return { slope, intercept };
+    return { slope, intercept,  endPoint: pointB  };
 };
 
 // Функция для нахождения пересечения двух линий, определенных их коэффициентами
@@ -18,6 +19,9 @@ const findIntersection = (line1: { slope: number; intercept: number }, line2: { 
     return { x, y };
 };
 
+function isIntersectionValid(intersection: IPoint, segment1End: IPoint, segment2Start: IPoint): boolean {
+    return intersection.x > segment1End.x && intersection.x < segment2Start.x;
+}
 const tryMergeSegments = (segment1: IPoint[], segment2: IPoint[], epsilon: number): IPoint[] | null => {
     const combinedSegmentData = [...segment1, ...segment2];
     const segmentLinePoints = leastSquaresFilter(combinedSegmentData);
@@ -37,7 +41,9 @@ const tryMergeSegments = (segment1: IPoint[], segment2: IPoint[], epsilon: numbe
 
 // Функция для улучшенной аппроксимации сегментов
 const enhancedSegmentApproximation: IFilter = (points: IPoint[], epsilon: number): IPoint[] => {
+    // const segmentsBoundaries = enhancedSplitAndMergeFilter(points, epsilon);
     const segmentsBoundaries = splitAndMergeFilter(points, epsilon);
+    
     let enhancedSegments: IPoint[] = [];
     let lastLine = null;
 
@@ -73,7 +79,15 @@ const enhancedSegmentApproximation: IFilter = (points: IPoint[], epsilon: number
 
         if (lastLine) {
             const intersection = findIntersection(lastLine, segmentLine);
-            enhancedSegments.push(intersection);
+            if (isIntersectionValid(intersection, lastLine.endPoint, segmentLinePoints[0])) {
+                enhancedSegments.push(intersection);
+            } else {
+                // Усреднение
+                enhancedSegments.push({
+                    x: (lastLine.endPoint.x + segmentLinePoints[0].x) / 2,
+                    y: (lastLine.endPoint.y + segmentLinePoints[0].y) / 2
+                });
+            }
         }
 
         lastLine = segmentLine;
