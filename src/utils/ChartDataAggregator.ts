@@ -28,12 +28,11 @@ import enhancedSplitAndMergeFilter from '../filters/enhancedSplitAndMergeFilter.
 import recursiveSegmentationEntryPoint from '../filters/recursiveCubicPolynomeSegmentation.js';
 import { CubicPolynomialApproximation } from '../classes/CubicPolynomialApproximation.js';
 
-export default async function ChartDataAggregator(csvpoints: IPoint[]): Promise<IDataSet[]> {
+export default async function ChartDataAggregator(csvpoints: IPoint[], coordinateA: number, coordinateB: number): Promise<IDataSet[]> {
 
     const sections = [];   
     const orderByXPoints = orderByXFilter(csvpoints); 
-    const rangedPoints = filterXRange(orderByXPoints, 63, 65
-
+    const rangedPoints = filterXRange(orderByXPoints, coordinateA, coordinateB
         );
 
     const fineCubePolynomialApproximation = new CubicPolynomialApproximation();
@@ -43,7 +42,7 @@ export default async function ChartDataAggregator(csvpoints: IPoint[]): Promise<
     const extremesFinePoints2 = fineCubePolynomialApproximation.calculateSecondDerivativeGraph(0.1) ;
     
         // console.log(extremesFinePoints)
-    const approximatedWeighted = leastSquaresWeightedFilter(rangedPoints);
+    const approximatedWeighted = leastSquaresWeightedFilter(rangedPoints,0.1);
     const approximatedPolynomial = leastSquaresPolynomialApproximation(rangedPoints, 3);
 
     // const recursiveCubicPolynomeSegmentationPoints = recursiveSegmentationEntryPoint(rangedPoints);
@@ -56,7 +55,7 @@ export default async function ChartDataAggregator(csvpoints: IPoint[]): Promise<
     // sections.push({ label: "Расширенный метод",      points: enhancedSplitAndMergeFilter(rangedPoints, 0.2), showLine:true, fill: false, tension: 0, borderColor: 'green',backgroundColor: 'green'});
     // sections.push({ label: "Расширенный метод",      points: recursiveCubicPolynomeSegmentationPoints, showLine:true, fill: false, tension: 0, borderColor: 'green',backgroundColor: 'green'});
     // sections.push({ label: "Расширенный метод",      points: finePointsPolynomial, showLine:true, fill: false, tension: 0, borderColor: 'green',backgroundColor: 'green'});
-    //  sections.push({ label: "LeastSQRWeight", points: approximatedWeighted, showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
+     sections.push({ label: "LeastSQRWeight", points: approximatedWeighted, showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
     // sections.push({ label: "LeastPolynom", points: approximatedPolynomial, showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
     // sections.push({ label: "enhanced", points: enhancedSegmentApproximation(rangedPoints, 0.1), showLine: true, tension: 0, fill: false, borderColor: 'red', backgroundColor: 'red' });
    

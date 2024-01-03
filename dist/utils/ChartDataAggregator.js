@@ -13,18 +13,18 @@ import filterXRange from '../filters/filterXRange.js';
 import leastSquaresWeightedFilter from '../filters/leastSquaresWeightedFilter.js';
 import leastSquaresPolynomialApproximation from '../filters/leastSquaresPolynomialApproximation.js';
 import { CubicPolynomialApproximation } from '../classes/CubicPolynomialApproximation.js';
-export default function ChartDataAggregator(csvpoints) {
+export default function ChartDataAggregator(csvpoints, coordinateA, coordinateB) {
     return __awaiter(this, void 0, void 0, function* () {
         const sections = [];
         const orderByXPoints = orderByXFilter(csvpoints);
-        const rangedPoints = filterXRange(orderByXPoints, 63, 65);
+        const rangedPoints = filterXRange(orderByXPoints, coordinateA, coordinateB);
         const fineCubePolynomialApproximation = new CubicPolynomialApproximation();
         const approximatedPoints = fineCubePolynomialApproximation.approximate(rangedPoints);
         const finePointsPolynomial = fineCubePolynomialApproximation.fineCubePolynomialApproximation(0.1);
         const extremesFinePoints1 = fineCubePolynomialApproximation.calculateFirstDerivativeGraph(0.1);
         const extremesFinePoints2 = fineCubePolynomialApproximation.calculateSecondDerivativeGraph(0.1);
         // console.log(extremesFinePoints)
-        const approximatedWeighted = leastSquaresWeightedFilter(rangedPoints);
+        const approximatedWeighted = leastSquaresWeightedFilter(rangedPoints, 0.1);
         const approximatedPolynomial = leastSquaresPolynomialApproximation(rangedPoints, 3);
         // const recursiveCubicPolynomeSegmentationPoints = recursiveSegmentationEntryPoint(rangedPoints);
         // console.log(recursiveCubicPolynomeSegmentationPoints);
@@ -35,7 +35,7 @@ export default function ChartDataAggregator(csvpoints) {
         // sections.push({ label: "Расширенный метод",      points: enhancedSplitAndMergeFilter(rangedPoints, 0.2), showLine:true, fill: false, tension: 0, borderColor: 'green',backgroundColor: 'green'});
         // sections.push({ label: "Расширенный метод",      points: recursiveCubicPolynomeSegmentationPoints, showLine:true, fill: false, tension: 0, borderColor: 'green',backgroundColor: 'green'});
         // sections.push({ label: "Расширенный метод",      points: finePointsPolynomial, showLine:true, fill: false, tension: 0, borderColor: 'green',backgroundColor: 'green'});
-        //  sections.push({ label: "LeastSQRWeight", points: approximatedWeighted, showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
+        sections.push({ label: "LeastSQRWeight", points: approximatedWeighted, showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
         // sections.push({ label: "LeastPolynom", points: approximatedPolynomial, showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
         // sections.push({ label: "enhanced", points: enhancedSegmentApproximation(rangedPoints, 0.1), showLine: true, tension: 0, fill: false, borderColor: 'red', backgroundColor: 'red' });
         // console.log(enhancedSplitAndMergeFilter(rangedPoints, 0.5));

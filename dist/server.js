@@ -18,9 +18,24 @@ dotenv.config();
 const app = express();
 const port = 3000;
 const csvFilePath = './data/data.csv';
+// Define global variables for coordinates A and B
+let coordinateA = 0;
+let coordinateB = 0;
 app.use(express.static('public'));
 app.use(express.static('dist'));
+app.use(express.json());
 console.log("SERVER START...");
+// POST маршрут для обновления координат
+app.post('/update-coordinates', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { coordinateA: newCoordinateA, coordinateB: newCoordinateB } = req.body;
+    // Проверьте и обновите глобальные переменные координат
+    // (Добавьте здесь проверку входящих данных, если это необходимо)
+    coordinateA = newCoordinateA;
+    coordinateB = newCoordinateB;
+    console.log("updates");
+    // Ответ клиенту о том, что координаты были обновлены
+    res.json({ message: 'Координаты обновлены' });
+}));
 app.get('/data', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("GET DATA");
     if (fs.existsSync(csvFilePath)) {
@@ -37,7 +52,7 @@ app.get('/data', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                         return { x, y };
                     });
                     // Обработка точек через ChartDataAggregator и добавление в dataSets
-                    const processedDataSets = yield ChartDataAggregator(points);
+                    const processedDataSets = yield ChartDataAggregator(points, coordinateA, coordinateB);
                     processedDataSets.forEach(ds => dataSets.push(Object.assign({}, ds)));
                 }
                 console.log('Data successfully loaded from CSV file');
