@@ -1,15 +1,50 @@
 export class CubicPolynomialApproximation {
     constructor() {
-        this.coefficients = [];
-        this.points = [];
+        this.errorThreshold = 0.25; // Threshold for error
+        this.coefficients = []; // коэф полинома
+        this.points = []; // входной набор данных
+        this.approximatedPoints = []; // набор упорядоченных точек полинома
     }
     approximate(points) {
         this.points = points;
+        this.removeDuplicatesAndSort();
         if (points.length === 0) {
             throw new Error("Массив точек не должен быть пустым.");
         }
-        let x = points.map(p => p.x);
-        let y = points.map(p => p.y);
+        this.performApproximation();
+        // вызов для тестирования
+        let extremes = this.calculateExtremes(0.1);
+        // Remove points with high error and re-approximate if necessary
+        let highErrorPoints = this.identifyHighErrorPoints();
+        if (highErrorPoints.length > 0) {
+            this.points = this.points.filter(p => !highErrorPoints.includes(p));
+            this.performApproximation();
+        }
+        return this.approximatedPoints;
+    }
+    calculateRMSE() {
+        let sumOfSquares = this.points.reduce((sum, point, index) => {
+            let approxPoint = this.approximatedPoints[index];
+            let diff = point.y - approxPoint.y;
+            return sum + diff * diff;
+        }, 0);
+        return Math.sqrt(sumOfSquares / this.points.length);
+    }
+    removeDuplicatesAndSort() {
+        this.points = this.points
+            .filter((point, index, self) => index === self.findIndex(p => p.x === point.x && p.y === point.y))
+            .sort((a, b) => a.x - b.x);
+    }
+    identifyHighErrorPoints() {
+        return this.points.filter((point, index) => {
+            let approxPoint = this.approximatedPoints[index];
+            let diff = Math.abs(point.y - approxPoint.y);
+            return diff > this.errorThreshold;
+        });
+    }
+    performApproximation() {
+        let x = this.points.map(p => p.x);
+        let y = this.points.map(p => p.y);
         let A = new Array(4).fill(0).map(() => new Array(4).fill(0));
         let B = new Array(4).fill(0);
         for (let i = 0; i <= 3; i++) {
@@ -19,9 +54,7 @@ export class CubicPolynomialApproximation {
             B[i] = x.reduce((sum, xi, index) => sum + Math.pow(xi, i) * y[index], 0);
         }
         this.coefficients = this.solveLinearSystem(A, B);
-        // вызов для тестирования
-        let extremes = this.calculateExtremes(0.1);
-        return x.map(xi => ({
+        this.approximatedPoints = x.map(xi => ({
             x: xi,
             y: this.coefficients.reduce((sum, coeff, index) => sum + coeff * Math.pow(xi, index), 0)
         }));
@@ -70,71 +103,6 @@ export class CubicPolynomialApproximation {
             }
         }
         return x;
-    }
-    findMaxTurnPoint() {
-        return this.findMaxTurnPointOfCubicPolynomial(this.coefficients);
-    }
-    findMaxTurnPointOfCubicPolynomial(coefficients) {
-        console.log("Коэффициенты полинома:", coefficients);
-        if (coefficients.length !== 4) {
-            console.error("Должно быть ровно 4 коэффициента для кубического полинома.");
-            return null;
-        }
-        const [a0, a1, a2, a3] = coefficients;
-        console.log(`Коэффициенты полинома: a0=${a0}, a1=${a1}, a2=${a2}, a3=${a3}`);
-        // Первая производная и дискриминант
-        const a = 3 * a3;
-        const b = 2 * a2;
-        const c = a1;
-        const discriminant = b * b - 4 * a * c;
-        console.log(`Дискриминант: ${discriminant}`);
-        const turnPoints = [];
-        if (discriminant >= 0) {
-            const x1 = (-b + Math.sqrt(discriminant)) / (2 * a);
-            const x2 = (-b - Math.sqrt(discriminant)) / (2 * a);
-            // Добавляем корни, если они не NaN
-            [x1, x2].forEach(x => {
-                console.log(`Корни есть, вот х: ${x}`);
-                if (!isNaN(x)) {
-                    turnPoints.push({ x, y: a3 * x * x * x + a2 * x * x + a1 * x + a0 });
-                }
-            });
-        }
-        return turnPoints;
-        // if (discriminant < 0) {
-        //     console.log("Нет действительных корней.");
-        //     return null;
-        // } else {
-        //     const x1 = (-b + Math.sqrt(discriminant)) / (2 * a);
-        //     const x2 = (-b - Math.sqrt(discriminant)) / (2 * a);
-        //     console.log(`Корни уравнения: x1=${x1}, x2=${x2}`);
-        // let maxTurnAngle = 0;
-        // let maxTurnPoint: IPoint | null = null;
-        // [x1, x2].forEach(x => {
-        //     if (!isNaN(x)) {
-        //         const slope = 3 * a3 * x * x + 2 * a2 * x + a1;
-        //         const angle = Math.atan(Math.abs(slope));
-        //         console.log(`x=${x}, slope=${slope}, angle=${angle}`);
-        //         if (angle > maxTurnAngle) {
-        //             maxTurnAngle = angle;
-        //             maxTurnPoint = { x, y: a3 * x * x * x + a2 * x * x + a1 * x + a0 };
-        //         }
-        //     }
-        // });
-        // if (maxTurnPoint) {
-        //     console.log("Максимальная точка поворота:", maxTurnPoint);
-        // } else {
-        //     console.log("Точка поворота не найдена.");
-        // }
-        // return maxTurnPoint;
-    }
-    calculateRMSE(originalPoints, approximatedPoints) {
-        let sumOfSquares = originalPoints.reduce((sum, point, index) => {
-            let approxPoint = approximatedPoints[index];
-            let diff = point.y - approxPoint.y;
-            return sum + diff * diff;
-        }, 0);
-        return Math.sqrt(sumOfSquares / originalPoints.length);
     }
     fineCubePolynomialApproximation(step) {
         if (this.coefficients.length === 0 || this.points.length === 0) {
@@ -207,7 +175,7 @@ export class CubicPolynomialApproximation {
         for (let i = 1; i < finePoints.length; i++) {
             const dy = finePoints[i].y - finePoints[i - 1].y;
             const dx = finePoints[i].x - finePoints[i - 1].x;
-            const derivativeValue = (dy / dx) * 5 + 757;
+            const derivativeValue = (dy / dx); //* 5 + 757;
             // Добавляем координату X и значение производной как Y
             firstDerivatives.push({ x: finePoints[i].x, y: derivativeValue });
         }
@@ -230,9 +198,66 @@ export class CubicPolynomialApproximation {
         for (let i = 1; i < firstDerivatives.length; i++) {
             const d2y = firstDerivatives[i] - firstDerivatives[i - 1];
             const dx = finePoints[i].x - finePoints[i - 1].x;
-            const secondDerivativeValue = (d2y / dx); // * 100 + 757;
+            const secondDerivativeValue = (d2y / dx); //* 10 + 755;
             secondDerivatives.push({ x: finePoints[i].x, y: secondDerivativeValue });
         }
         return secondDerivatives;
+    }
+    findMaxTurnPoint() {
+        return this.findMaxTurnPointOfCubicPolynomial(this.coefficients);
+    }
+    findMaxTurnPointOfCubicPolynomial(coefficients) {
+        console.log("Коэффициенты полинома:", coefficients);
+        if (coefficients.length !== 4) {
+            console.error("Должно быть ровно 4 коэффициента для кубического полинома.");
+            return null;
+        }
+        const [a0, a1, a2, a3] = coefficients;
+        console.log(`Коэффициенты полинома: a0=${a0}, a1=${a1}, a2=${a2}, a3=${a3}`);
+        // Первая производная и дискриминант
+        const a = 3 * a3;
+        const b = 2 * a2;
+        const c = a1;
+        const discriminant = b * b - 4 * a * c;
+        console.log(`Дискриминант: ${discriminant}`);
+        const turnPoints = [];
+        if (discriminant >= 0) {
+            const x1 = (-b + Math.sqrt(discriminant)) / (2 * a);
+            const x2 = (-b - Math.sqrt(discriminant)) / (2 * a);
+            // Добавляем корни, если они не NaN
+            [x1, x2].forEach(x => {
+                console.log(`Корни есть, вот х: ${x}`);
+                if (!isNaN(x)) {
+                    turnPoints.push({ x, y: a3 * x * x * x + a2 * x * x + a1 * x + a0 });
+                }
+            });
+        }
+        return turnPoints;
+        // if (discriminant < 0) {
+        //     console.log("Нет действительных корней.");
+        //     return null;
+        // } else {
+        //     const x1 = (-b + Math.sqrt(discriminant)) / (2 * a);
+        //     const x2 = (-b - Math.sqrt(discriminant)) / (2 * a);
+        //     console.log(`Корни уравнения: x1=${x1}, x2=${x2}`);
+        // let maxTurnAngle = 0;
+        // let maxTurnPoint: IPoint | null = null;
+        // [x1, x2].forEach(x => {
+        //     if (!isNaN(x)) {
+        //         const slope = 3 * a3 * x * x + 2 * a2 * x + a1;
+        //         const angle = Math.atan(Math.abs(slope));
+        //         console.log(`x=${x}, slope=${slope}, angle=${angle}`);
+        //         if (angle > maxTurnAngle) {
+        //             maxTurnAngle = angle;
+        //             maxTurnPoint = { x, y: a3 * x * x * x + a2 * x * x + a1 * x + a0 };
+        //         }
+        //     }
+        // });
+        // if (maxTurnPoint) {
+        //     console.log("Максимальная точка поворота:", maxTurnPoint);
+        // } else {
+        //     console.log("Точка поворота не найдена.");
+        // }
+        // return maxTurnPoint;
     }
 }

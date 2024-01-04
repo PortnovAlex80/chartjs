@@ -22,7 +22,7 @@ function recursiveSegmentation(points: IPoint[]): IPoint[] {
         const segmentPoints = points.slice(start, end + 1);
         const cubicApproximation = new CubicPolynomialApproximation();
         const approximatedPoints = cubicApproximation.approximate(segmentPoints);
-        const rmse = cubicApproximation.calculateRMSE(segmentPoints, approximatedPoints);
+        const rmse = cubicApproximation.calculateRMSE();
 
         isLogging(depth) && console.log(`RMSE = ${rmse}`);
         if (rmse < RMSE_THRESHOLD) {

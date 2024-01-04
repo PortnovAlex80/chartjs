@@ -27,6 +27,8 @@ import leastSquaresPolynomialApproximation from '../filters/leastSquaresPolynomi
 import enhancedSplitAndMergeFilter from '../filters/enhancedSplitAndMergeFilter.js';
 import recursiveSegmentationEntryPoint from '../filters/recursiveCubicPolynomeSegmentation.js';
 import { CubicPolynomialApproximation } from '../classes/CubicPolynomialApproximation.js';
+import medianFilter from '../filters/medianFilter.js';
+import customMedianFilter from '../filters/customMedianFilter.js';
 
 export default async function ChartDataAggregator(csvpoints: IPoint[], coordinateA: number, coordinateB: number): Promise<IDataSet[]> {
 
@@ -35,11 +37,7 @@ export default async function ChartDataAggregator(csvpoints: IPoint[], coordinat
     const rangedPoints = filterXRange(orderByXPoints, coordinateA, coordinateB
         );
 
-    const fineCubePolynomialApproximation = new CubicPolynomialApproximation();
-    const approximatedPoints = fineCubePolynomialApproximation.approximate(rangedPoints);
-    const finePointsPolynomial = fineCubePolynomialApproximation.fineCubePolynomialApproximation(0.1);
-    const extremesFinePoints1 = fineCubePolynomialApproximation.calculateFirstDerivativeGraph(0.1) ;
-    const extremesFinePoints2 = fineCubePolynomialApproximation.calculateSecondDerivativeGraph(0.1) ;
+
     
         // console.log(extremesFinePoints)
     const approximatedWeighted = leastSquaresWeightedFilter(rangedPoints,0.1);
@@ -47,15 +45,30 @@ export default async function ChartDataAggregator(csvpoints: IPoint[], coordinat
 
     // const recursiveCubicPolynomeSegmentationPoints = recursiveSegmentationEntryPoint(rangedPoints);
     // console.log(recursiveCubicPolynomeSegmentationPoints);
-    // sections.push({ label: "Extremes",      points: extremesFinePoints1, showLine:true, fill: false, backgroundColor: 'red'});
-    // sections.push({ label: "Extremes",      points: extremesFinePoints2, showLine:true, fill: false, backgroundColor: 'green'});
+    const medianFilterPoints = medianFilter(rangedPoints, 1);
+    const customMedianFilterPoints = customMedianFilter(rangedPoints, 2);
     
+    // Devs graph
+    const fineCubePolynomialApproximation = new CubicPolynomialApproximation();
+    const approximatedPoints = fineCubePolynomialApproximation.approximate(rangedPoints);
+    const finePointsPolynomial = fineCubePolynomialApproximation.fineCubePolynomialApproximation(0.1);
+    const extremesFinePoints1 = fineCubePolynomialApproximation.calculateFirstDerivativeGraph(0.1) ;
+    const extremesFinePoints2 = fineCubePolynomialApproximation.calculateSecondDerivativeGraph(0.1) ;
+    console.log(fineCubePolynomialApproximation.calculateRMSE());
+    sections.push({ label: "Extremes",      points: extremesFinePoints1, showLine:true, fill: false, backgroundColor: 'red'});
+    sections.push({ label: "Extremes",      points: extremesFinePoints2, showLine:true, fill: false, backgroundColor: 'green'});
+        
     sections.push({ label: "finePointsPolynomial",      points: finePointsPolynomial, showLine:true, fill: false, backgroundColor: 'red'});
     sections.push({ label: "ТЛО",      points: rangedPoints, showLine:false, fill: false, backgroundColor: 'grey'});
+    sections.push({ label: "LeastSQRWeight", points: approximatedWeighted, showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
+   
+    // sections.push({ label: "ТЛО median",      points: medianFilterPoints, showLine:false, fill: false, backgroundColor: 'red'});
+    // sections.push({ label: "ТЛО custome median",      points: customMedianFilterPoints, showLine:false, fill: false, backgroundColor: 'red'});
+    
+    
     // sections.push({ label: "Расширенный метод",      points: enhancedSplitAndMergeFilter(rangedPoints, 0.2), showLine:true, fill: false, tension: 0, borderColor: 'green',backgroundColor: 'green'});
     // sections.push({ label: "Расширенный метод",      points: recursiveCubicPolynomeSegmentationPoints, showLine:true, fill: false, tension: 0, borderColor: 'green',backgroundColor: 'green'});
     // sections.push({ label: "Расширенный метод",      points: finePointsPolynomial, showLine:true, fill: false, tension: 0, borderColor: 'green',backgroundColor: 'green'});
-     sections.push({ label: "LeastSQRWeight", points: approximatedWeighted, showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
     // sections.push({ label: "LeastPolynom", points: approximatedPolynomial, showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
     // sections.push({ label: "enhanced", points: enhancedSegmentApproximation(rangedPoints, 0.1), showLine: true, tension: 0, fill: false, borderColor: 'red', backgroundColor: 'red' });
    
