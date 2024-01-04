@@ -83,7 +83,7 @@ if (thirdFilteredPoints.length > 1) {
             y: point.x * slope + intercept
         }));
 
-    console.log(`RMSE Least- ${calculateRMSELeastSquaresWeighted (points, approximatedPoints)}`);
+    // console.log(`RMSE Least- ${calculateRMSELeastSquaresWeighted (points, approximatedPoints)}`);
     return [approximatedFirstPoint, approximatedLastPoint];
 };
 

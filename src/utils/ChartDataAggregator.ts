@@ -50,19 +50,28 @@ export default async function ChartDataAggregator(csvpoints: IPoint[], coordinat
     
     // Devs graph
     const fineCubePolynomialApproximation = new CubicPolynomialApproximation();
-    const approximatedPoints = fineCubePolynomialApproximation.approximate(rangedPoints);
-    const finePointsPolynomial = fineCubePolynomialApproximation.fineCubePolynomialApproximation(0.1);
+    let clearingPoints = fineCubePolynomialApproximation.cleanPointsFromOutliers(rangedPoints);
+    // const approximatedPoints = fineCubePolynomialApproximation.approximate(rangedPoints);
+    const loperccc = fineCubePolynomialApproximation.findQualitySegments(clearingPoints);
+
+    
+    // const finePointsPolynomial = fineCubePolynomialApproximation.fineCubePolynomialApproximation(0.1);
     const extremesFinePoints1 = fineCubePolynomialApproximation.calculateFirstDerivativeGraph(0.1) ;
     const extremesFinePoints2 = fineCubePolynomialApproximation.calculateSecondDerivativeGraph(0.1) ;
-    console.log(fineCubePolynomialApproximation.calculateRMSE());
-    sections.push({ label: "Extremes",      points: extremesFinePoints1, showLine:true, fill: false, backgroundColor: 'red'});
-    sections.push({ label: "Extremes",      points: extremesFinePoints2, showLine:true, fill: false, backgroundColor: 'green'});
-        
-    sections.push({ label: "finePointsPolynomial",      points: finePointsPolynomial, showLine:true, fill: false, backgroundColor: 'red'});
+  
+    // sections.push({ label: "Extremes",      points: extremesFinePoints1, showLine:true, fill: false, backgroundColor: 'red'});
+    // sections.push({ label: "Extremes",      points: extremesFinePoints2, showLine:true, fill: false, backgroundColor: 'green'});
+
+
+    sections.push({ label: "enhanced", points: enhancedSegmentApproximation(rangedPoints, 0.1), showLine: true, tension: 0, fill: false, borderColor: 'green', backgroundColor: 'green' });
+    // sections.push({ label: "finePointsPolynomial",      points: finePointsPolynomial, showLine:true, fill: false, backgroundColor: 'red'});
     sections.push({ label: "ТЛО",      points: rangedPoints, showLine:false, fill: false, backgroundColor: 'grey'});
-    sections.push({ label: "LeastSQRWeight", points: approximatedWeighted, showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
-   
-    // sections.push({ label: "ТЛО median",      points: medianFilterPoints, showLine:false, fill: false, backgroundColor: 'red'});
+    // sections.push({ label: "LeastSQRWeight", points: approximatedWeighted, showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
+console.log(loperccc);
+   sections.push({ label: "Best", points: loperccc, showLine: true, tension: 0, fill: false, borderColor: 'red', backgroundColor: 'red' });
+        // sections.push({ label: "clean", points: clearingPoints, showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
+    
+        // sections.push({ label: "ТЛО median",      points: medianFilterPoints, showLine:false, fill: false, backgroundColor: 'red'});
     // sections.push({ label: "ТЛО custome median",      points: customMedianFilterPoints, showLine:false, fill: false, backgroundColor: 'red'});
     
     
@@ -70,7 +79,7 @@ export default async function ChartDataAggregator(csvpoints: IPoint[], coordinat
     // sections.push({ label: "Расширенный метод",      points: recursiveCubicPolynomeSegmentationPoints, showLine:true, fill: false, tension: 0, borderColor: 'green',backgroundColor: 'green'});
     // sections.push({ label: "Расширенный метод",      points: finePointsPolynomial, showLine:true, fill: false, tension: 0, borderColor: 'green',backgroundColor: 'green'});
     // sections.push({ label: "LeastPolynom", points: approximatedPolynomial, showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
-    // sections.push({ label: "enhanced", points: enhancedSegmentApproximation(rangedPoints, 0.1), showLine: true, tension: 0, fill: false, borderColor: 'red', backgroundColor: 'red' });
+
    
     // console.log(enhancedSplitAndMergeFilter(rangedPoints, 0.5));
  

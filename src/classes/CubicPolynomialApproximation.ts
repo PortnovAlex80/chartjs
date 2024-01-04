@@ -1,15 +1,18 @@
+import leastSquaresWeightedFilter from '../filters/leastSquaresWeightedFilter.js';
 import { IPoint } from '../interfaces/IPoint';
 
 export class CubicPolynomialApproximation {
     private coefficients: number[];
     private points: IPoint[];
     private approximatedPoints: IPoint[];
-    private errorThreshold = 0.35; // Threshold for error
+    private errorThreshold = 0.25; // Threshold for error
+    private approximaredLeastSWPoints: IPoint[];
 
     constructor() {
         this.coefficients = []; // коэф полинома
         this.points = []; // входной набор данных
         this.approximatedPoints = []; // набор упорядоченных точек полинома
+        this.approximaredLeastSWPoints = [];
     }
 
     approximate(points: IPoint[]): IPoint[] {
@@ -24,7 +27,7 @@ export class CubicPolynomialApproximation {
         this.performApproximation();
 
         // вызов для тестирования
-        let extremes = this.calculateExtremes(0.1)
+        // let extremes = this.calculateExtremes(0.1)
 
         // Remove points with high error and re-approximate if necessary
         let highErrorPoints = this.identifyHighErrorPoints();
@@ -32,9 +35,139 @@ export class CubicPolynomialApproximation {
             this.points = this.points.filter(p => !highErrorPoints.includes(p));
             this.performApproximation();
         }
+
+        
+
     return this.approximatedPoints;
     }
 
+    findQualitySegments(points: IPoint[]): IPoint[] {
+        console.log(`findQualitySegments вызвана с ${points.length} точками`);
+        this.removeDuplicatesAndSort();
+    
+        let bestSegments: IPoint[][] = [];
+        const minSegmentLength = 0.10; // Минимальная длина сегмента
+    
+        const calculateSegmentLength = (segment: IPoint[]): number => {
+            if (segment.length < 2) return 0;
+            const dx = segment[segment.length - 1].x - segment[0].x;
+            const dy = segment[segment.length - 1].y - segment[0].y;
+            return Math.sqrt(dx * dx + dy * dy);
+        };
+    
+        let start = 0;
+        while (start < points.length - 1) {
+            let end = start + 1;
+            let lastValidSegment = null;
+            console.log(`Цикл первый`);
+    
+            // Наращиваем длину сегмента до минимально допустимой
+            while (end < points.length && calculateSegmentLength(points.slice(start, end + 1)) < minSegmentLength) {
+                end++;
+            }
+    
+            // Проверяем удовлетворяют ли условиям более длинные сегменты
+            while (end < points.length) {
+                let segment = points.slice(start, end + 1);
+                // console.log(`Рассмотрение сегмента от ${segment[0].x} до ${segment[segment.length - 1].x}`);
+    
+                this.approximate(segment);
+                this.approximaredLeastSWPoints = this.generatePointsOnLeastSquaresLine();
+                const polynomialRMSE = this.calculateRMSE();
+                const lineRMSE = this.calculateRMSELeastSquaresWeighted();
+                const diffRMSE = this.calculateAbsDiffRmse();
+                const threshold_rmse = 0.06
+                if (polynomialRMSE < threshold_rmse && lineRMSE < threshold_rmse && diffRMSE < threshold_rmse) {
+                    lastValidSegment = segment;
+                    end++; // Продолжаем увеличивать сегмент
+                } else {
+                    break; // Прерываем, если сегмент не удовлетворяет условиям
+                }
+            }
+    
+            if (lastValidSegment) {
+                bestSegments.push(lastValidSegment);
+                console.log(`Найден подходящий сегмент от ${lastValidSegment[0].x} до ${lastValidSegment[lastValidSegment.length - 1].x}`);
+                start = lastValidSegment.length + start - 1; // Обновляем start для следующего цикла
+            } else {
+                start++; // Если подходящий сегмент не найден, переходим к следующей точке
+            }
+        }
+    
+        let combinedSegments: IPoint[] = [];
+        bestSegments.forEach((segment, index) => {
+            if (segment.length > 0) {
+                // Добавляем первую точку сегмента, если она не совпадает с последней точкой предыдущего сегмента
+                if (index === 0 || (combinedSegments[combinedSegments.length - 1].x !== segment[0].x || combinedSegments[combinedSegments.length - 1].y !== segment[0].y)) {
+                    combinedSegments.push(segment[0]);
+                }
+        
+                // Добавляем последнюю точку сегмента, если она отличается от первой
+                if (segment.length > 1) {
+                    combinedSegments.push(segment[segment.length - 1]);
+                }
+            }
+        });
+        
+        
+        console.log(`Найдено подходящих сегментов: ${bestSegments.length}`);
+        return combinedSegments;
+        
+    
+        console.log(`Найдено подходящих сегментов: ${bestSegments.length}`);
+        return combinedSegments;
+    }
+    
+    cleanPointsFromOutliers(originalPoints: IPoint[]): IPoint[] {
+        let cleanedPoints: IPoint[] = [];
+        let start = 0;
+        const segmentLength: number = 2;
+
+        while (start < originalPoints.length) {
+            // Определяем конец текущего сегмента
+            let end = start;
+            while (end < originalPoints.length && this.calculateSegmentLength(originalPoints.slice(start, end + 1)) < segmentLength) {
+                end++;
+            }
+
+            // Выбираем сегмент для аппроксимации
+            let segment = originalPoints.slice(start, end + 1);
+            this.approximate(segment);
+
+            // Идентификация и удаление выбросов
+            let highErrorPoints = this.identifyHighErrorPoints();
+            cleanedPoints.push(...segment.filter(p => !highErrorPoints.includes(p)));
+
+            start = end + 1;
+        }
+
+        return cleanedPoints;
+    }
+    
+    private calculateSegmentLength(segment: IPoint[]): number {
+        const calculateSegmentLength = (segment: IPoint[]): number => {
+            if (segment.length < 2) return 0;
+            const dx = segment[segment.length - 1].x - segment[0].x;
+            const dy = segment[segment.length - 1].y - segment[0].y;
+            return Math.sqrt(dx * dx + dy * dy);
+        };
+        return calculateSegmentLength(segment);
+    }
+    
+    logger(): void {
+        this.approximaredLeastSWPoints = this.generatePointsOnLeastSquaresLine();
+    
+        const polynomialRMSE = this.calculateRMSE();
+        const lineRMSE = this.calculateRMSELeastSquaresWeighted();
+        const diffRMSE = this.calculateAbsDiffRmse();
+    
+        console.log(`Коэффициенты эффективности вписывания`);
+    
+        console.log(`Качество полинома RMSE - ${polynomialRMSE} ${polynomialRMSE < 0.075 ? "(высокое качество)" : "(ошибка вписывания)"}`);
+        console.log(`Качество прямой RMSE - ${lineRMSE} ${lineRMSE < 0.075 ? "(высокое качество)" : "(ошибка вписывания)"}`);
+        console.log(`Взаимное отклонение прямой и полинома RMSE - ${diffRMSE} ${diffRMSE < 0.075 ? "(высокое качество)" : "(ошибка вписывания)"}`);
+    }
+    
     calculateRMSE(): number {
         let sumOfSquares = this.points.reduce((sum, point, index) => {
             let approxPoint = this.approximatedPoints[index];
@@ -42,6 +175,77 @@ export class CubicPolynomialApproximation {
             return sum + diff * diff;
         }, 0);
         return Math.sqrt(sumOfSquares / this.points.length);
+    }
+
+        calculateAbsDiffRmse(): number {
+        // Ensure that both sets of points are available
+        if (!this.approximatedPoints || !this.approximaredLeastSWPoints) {
+            throw new Error("Необходимо сначала сгенерировать оба набора точек.");
+        }
+
+        // Calculate the square of the differences
+        const sumOfSquares = this.approximatedPoints.reduce((sum, point, index) => {
+            const diff = point.y - this.approximaredLeastSWPoints[index].y;
+            return sum + diff * diff;
+        }, 0);
+
+        // Calculate the RMSE
+        return Math.sqrt(sumOfSquares / this.approximatedPoints.length);
+    }
+
+    calculateAbsDiff(): number[] {
+        // First, calculate the least squares line
+        const leastSquaresLine = this.approximaredLeastSWPoints;
+
+        // Then, calculate the Y values on the cubic polynomial for each X value
+        const polynomialYs = this.approximatedPoints.map(point => 
+            this.coefficients.reduce((sum, coeff, index) => sum + coeff * Math.pow(point.x, index), 0)
+        );
+
+        // Finally, calculate the absolute differences
+        const absDiffs = polynomialYs.map((polyY, index) => 
+            Math.abs(polyY - leastSquaresLine[index].y)
+        );
+
+        return absDiffs;
+    }
+
+    calculateRMSELeastSquaresWeighted(): number {
+        
+        const approximatedPoints = this.approximaredLeastSWPoints;
+
+        let sumOfSquares = this.points.reduce((sum, point, index) => {
+            let approxPoint = approximatedPoints[index];
+            let diff = point.y - approxPoint.y;
+            return sum + diff * diff;
+        }, 0);
+        return Math.sqrt(sumOfSquares / this.points.length);
+    }
+
+    private generatePointsOnLeastSquaresLine(): IPoint[] {
+        // Get the start and end points of the least squares line
+        this.approximaredLeastSWPoints = leastSquaresWeightedFilter(this.points);
+
+        if (this.approximaredLeastSWPoints.length < 2) {
+            throw new Error("leastSquaresWeightedFilter did not return enough points.");
+        }
+
+        const startPoint = this.approximaredLeastSWPoints[0];
+        const endPoint = this.approximaredLeastSWPoints[1];
+
+        // Calculate the slope of the line
+        const slope = (endPoint.y - startPoint.y) / (endPoint.x - startPoint.x);
+
+        // Function to calculate y for a given x on the line
+        const calculateY = (x: number) => startPoint.y + slope * (x - startPoint.x);
+
+        // Generate points on the line using the x values from approximatedPoints
+        const linePoints = this.approximatedPoints.map(point => ({
+            x: point.x,
+            y: calculateY(point.x)
+        }));
+
+        return linePoints;
     }
 
     private removeDuplicatesAndSort() {
@@ -329,5 +533,5 @@ export class CubicPolynomialApproximation {
             // return maxTurnPoint;
         }
 
-    
+
 }

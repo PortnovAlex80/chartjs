@@ -64,7 +64,7 @@ const leastSquaresWeightedFilter = (points) => {
         x: point.x,
         y: point.x * slope + intercept
     }));
-    console.log(`RMSE Least- ${calculateRMSELeastSquaresWeighted(points, approximatedPoints)}`);
+    // console.log(`RMSE Least- ${calculateRMSELeastSquaresWeighted (points, approximatedPoints)}`);
     return [approximatedFirstPoint, approximatedLastPoint];
 };
 function calculateRMSELeastSquaresWeighted(originalPoints, approximatedPoints) {

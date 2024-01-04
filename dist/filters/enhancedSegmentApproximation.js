@@ -32,6 +32,7 @@ const tryMergeSegments = (segment1, segment2, epsilon) => {
 // Функция для улучшенной аппроксимации сегментов
 const enhancedSegmentApproximation = (points, epsilon) => {
     // const segmentsBoundaries = enhancedSplitAndMergeFilter(points, epsilon);
+    // const segmentsBoundaries = new CubicPolynomialApproximation().findQualitySegments(points);
     const segmentsBoundaries = splitAndMergeFilter(points, epsilon);
     let enhancedSegments = [];
     let lastLine = null;
