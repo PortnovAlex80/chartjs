@@ -1,6 +1,6 @@
-import splitAndMergeFilter from './splitAndMergeFilter.js';
 import leastSquaresFilter from './leastSquaresFilter.js';
 import leastSquaresWeightedFilter from './leastSquaresWeightedFilter.js';
+import { CubicPolynomialApproximation } from '../classes/CubicPolynomialApproximation.js';
 // Функция для преобразования двух точек в объект с наклоном и пересечением
 const lineFromPoints = (pointA, pointB) => {
     const slope = (pointB.y - pointA.y) / (pointB.x - pointA.x);
@@ -32,8 +32,8 @@ const tryMergeSegments = (segment1, segment2, epsilon) => {
 // Функция для улучшенной аппроксимации сегментов
 const enhancedSegmentApproximation = (points, epsilon) => {
     // const segmentsBoundaries = enhancedSplitAndMergeFilter(points, epsilon);
-    // const segmentsBoundaries = new CubicPolynomialApproximation().findQualitySegments(points);
-    const segmentsBoundaries = splitAndMergeFilter(points, epsilon);
+    const segmentsBoundaries = new CubicPolynomialApproximation().findQualitySegments(points);
+    // const segmentsBoundaries = splitAndMergeFilter(points, epsilon);
     let enhancedSegments = [];
     let lastLine = null;
     let i = 0;

@@ -43,8 +43,8 @@ const tryMergeSegments = (segment1: IPoint[], segment2: IPoint[], epsilon: numbe
 // Функция для улучшенной аппроксимации сегментов
 const enhancedSegmentApproximation: IFilter = (points: IPoint[], epsilon: number): IPoint[] => {
     // const segmentsBoundaries = enhancedSplitAndMergeFilter(points, epsilon);
-    // const segmentsBoundaries = new CubicPolynomialApproximation().findQualitySegments(points);
-    const segmentsBoundaries = splitAndMergeFilter(points, epsilon);
+    const segmentsBoundaries = new CubicPolynomialApproximation().findQualitySegments(points);
+    // const segmentsBoundaries = splitAndMergeFilter(points, epsilon);
 
     let enhancedSegments: IPoint[] = [];
     let lastLine = null;
