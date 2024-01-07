@@ -2,7 +2,6 @@ import { IPoint } from '../interfaces/IPoint';
 import { IFilter } from '../interfaces/IFilter';
 import sortAndRemoveDuplicates from './sortAndRemoveDuplicates.js';
 import { CubicSpline } from '../utils/CubicSpline.js'; 
-import { removeOutliersFilter } from './removeOutliersFilter.js';
 import smoothingSpline from '@umn-latis/simple-smoothing-spline';
 
 const splineFilter: IFilter = (points: IPoint[]): IPoint[] => {

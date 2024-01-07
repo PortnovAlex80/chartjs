@@ -17,11 +17,13 @@ import { CubicPolynomialApproximation } from '../classes/CubicPolynomialApproxim
 import medianFilter from '../filters/medianFilter.js';
 // import enhancedMedianFilter from '../filters/newMedianFilter.js';
 import enhancedMedianFilter from '../filters/enhancedMedianFilter.js';
+import weightedGroundLevelMedianFilter from '../filters/weightedGroundLevelMedianFilter.js';
 export default function ChartDataAggregator(csvpoints, coordinateA, coordinateB) {
     return __awaiter(this, void 0, void 0, function* () {
         const sections = [];
         const orderByXPoints = orderByXFilter(csvpoints);
         const rangedPoints = filterXRange(orderByXPoints, coordinateA, coordinateB);
+        const weightedGroundLevelMedianFilterPoints = weightedGroundLevelMedianFilter(rangedPoints);
         // console.log(extremesFinePoints)
         const approximatedWeighted = leastSquaresWeightedFilter(rangedPoints, 0.1);
         const approximatedPolynomial = leastSquaresPolynomialApproximation(rangedPoints, 3);
@@ -44,9 +46,11 @@ export default function ChartDataAggregator(csvpoints, coordinateA, coordinateB)
         // sections.push({ label: "Extremes",      points: extremesFinePoints1, showLine:true, fill: false, backgroundColor: 'red'});
         // sections.push({ label: "Extremes",      points: extremesFinePoints2, showLine:true, fill: false, backgroundColor: 'green'});
         // sections.push({ label: "ТЛО new median",      points: newMedianFilterPoints, showLine:false, fill: false, backgroundColor: 'red'});
+        sections.push({ label: "weighted", points: weightedGroundLevelMedianFilterPoints, showLine: false, fill: false, backgroundColor: 'red' });
         // sections.push({ label: "ТЛО normalizre and echancedMF",      points: enhancedNormalizer(enhancedMedianFilterPoints), showLine:false, fill: false, backgroundColor: 'blue'});
-        sections.push({ label: "enhancedMedianFilterPoints", points: enhancedMedianFilterPoints, showLine: false, fill: false, backgroundColor: 'blue' });
-        sections.push({ label: "enhanced", points: enhancedSegmentApproximation((enhancedMedianFilterPoints), 0.1), showLine: true, tension: 0, fill: false, borderColor: 'green', backgroundColor: 'green' });
+        // sections.push({ label: "enhancedMedianFilterPoints",      points: enhancedMedianFilterPoints, showLine:false, fill: false, backgroundColor: 'blue'});
+        sections.push({ label: "enhanced median", points: enhancedSegmentApproximation((enhancedMedianFilterPoints), 0.1), showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
+        sections.push({ label: "enhanced weighted", points: enhancedSegmentApproximation((weightedGroundLevelMedianFilterPoints), 0.1), showLine: true, tension: 0, fill: false, borderColor: 'green', backgroundColor: 'green' });
         // sections.push({ label: "finePointsPolynomial",      points: finePointsPolynomial, showLine:true, fill: false, backgroundColor: 'blue'});
         sections.push({ label: "ТЛО", points: rangedPoints, showLine: false, fill: false, backgroundColor: 'grey' });
         // sections.push({ label: "LeastSQRWeight", points: approximatedWeighted, showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });

@@ -24,21 +24,7 @@ export class CubicPolynomialApproximation {
             throw new Error("Массив точек не должен быть пустым.");
         }
 
-        this.performApproximation();
-
-        // вызов для тестирования
-        // let extremes = this.calculateExtremes(0.1)
-
-        // Remove points with high error and re-approximate if necessary
-        // let highErrorPoints = this.identifyHighErrorPoints();
-        // if (highErrorPoints.length > 0) {
-        //     console.log(`Points cleaned - ${this.points.length}`);
-        //     this.points = this.points.filter(p => !highErrorPoints.includes(p));
-        //     this.performApproximation();
-        //     console.log(`Points was cleaned - ${this.points.length}`);
-        // }
-
-        
+        this.performApproximation();       
 
     return this.approximatedPoints;
     }
@@ -50,7 +36,7 @@ export class CubicPolynomialApproximation {
         this.removeDuplicatesAndSort();
     
         let bestSegments: IPoint[][] = [];
-        const minSegmentLength = 0.4; // Минимальная длина сегмента
+        const minSegmentLength = 0.20; // Минимальная длина сегмента
     
         const calculateSegmentLength = (segment: IPoint[]): number => {
             if (segment.length < 2) return 0;
