@@ -1,7 +1,16 @@
 import { IPoint } from '../interfaces/IPoint';
 import { IFilter } from '../interfaces/IFilter';
 
-
+/**
+ * Функция для аппроксимации заданного набора точек полиномом заданной степени
+ * методом наименьших квадратов. Эта аппроксимация используется для вычисления
+ * линии, которая наилучшим образом соответствует набору точек. Вынес в класс для удобства работы.
+ *
+ * @param points Массив точек для аппроксимации.
+ * @param degree Степень полинома для аппроксимации. По умолчанию равна 3 (кубический полином).
+ * @return Массив аппроксимированных точек.
+ * @throws Error Если массив точек пустой.
+ */
 const leastSquaresPolynomialApproximation: IFilter = (points: IPoint[], degree: number = 3): IPoint[] => {
     if (points.length === 0) {
         throw new Error("Массив точек не должен быть пустым.");

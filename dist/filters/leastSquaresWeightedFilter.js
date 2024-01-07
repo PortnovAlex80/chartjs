@@ -3,7 +3,7 @@ const leastSquaresWeightedFilter = (points) => {
         return points;
     }
     // Критерий, при котором вес обнуляется
-    const threshold = 0.15;
+    const threshold = 1.00;
     const calculateDistance = (point, slope, intercept) => {
         // Расчет расстояния от точки до линии
         return Math.abs(point.y - (slope * point.x + intercept));

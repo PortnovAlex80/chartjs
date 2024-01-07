@@ -16,7 +16,7 @@ const splineFilter = (points) => {
     const xMin = points[0].x;
     const xMax = points[points.length - 1].x;
     const step = (xMax - xMin) / (points.length - 1);
-    for (let x = xMin; x <= xMax; x += 0.005) {
+    for (let x = xMin; x <= xMax; x += 0.05) {
         interpolatedPoints.push({ x, y: spline.at(x) });
     }
     return interpolatedPoints;

@@ -1,16 +1,17 @@
 import leastSquaresFilter from './leastSquaresFilter.js';
-import leastSquaresWeightedFilter from './leastSquaresWeightedFilter.js';
 import { CubicPolynomialApproximation } from '../classes/CubicPolynomialApproximation.js';
 // Функция для преобразования двух точек в объект с наклоном и пересечением
 const lineFromPoints = (pointA, pointB) => {
     const slope = (pointB.y - pointA.y) / (pointB.x - pointA.x);
     const intercept = pointA.y - slope * pointA.x;
+    // console.log(`lineFromPoints: PointA: ${JSON.stringify(pointA)}, PointB: ${JSON.stringify(pointB)}, Slope: ${slope}, Intercept: ${intercept}`);
     return { slope, intercept, endPoint: pointB };
 };
 // Функция для нахождения пересечения двух линий, определенных их коэффициентами
 const findIntersection = (line1, line2) => {
     const x = (line2.intercept - line1.intercept) / (line1.slope - line2.slope);
     const y = line1.slope * x + line1.intercept;
+    // console.log(`findIntersection: Line1: ${JSON.stringify(line1)}, Line2: ${JSON.stringify(line2)}, Intersection: (${x}, ${y})`);
     return { x, y };
 };
 function isIntersectionValid(intersection, segment1End, segment2Start) {
@@ -51,9 +52,9 @@ const tryMergeSegments = (segment1, segment2, epsilon) => {
  */
 const enhancedSegmentApproximation = (points, epsilon) => {
     // выбор механизма сегментирования:
-    // const segmentsBoundaries = enhancedSplitAndMergeFilter(points, epsilon);
-    const segmentsBoundaries = new CubicPolynomialApproximation().findQualitySegments(points);
     // const segmentsBoundaries = splitAndMergeFilter(points, epsilon);
+    const segmentsBoundaries = new CubicPolynomialApproximation().findQualitySegments(points);
+    segmentsBoundaries.forEach(point => { console.log(`${JSON.stringify(point)}`); });
     let enhancedSegments = [];
     let lastLine = null;
     let i = 0;
@@ -70,20 +71,31 @@ const enhancedSegmentApproximation = (points, epsilon) => {
             }
         }
         // Применяем метод наименьших квадратов к сегменту
-        const segmentLinePoints = leastSquaresWeightedFilter(segmentData, epsilon);
+        const segmentLinePoints = leastSquaresFilter(segmentData);
         const segmentLine = lineFromPoints(segmentLinePoints[0], segmentLinePoints[1]);
+        console.log(`Segment line после least - ${JSON.stringify(segmentLinePoints[0])} - ${JSON.stringify(segmentLinePoints[1])} `);
         if (i === 0) {
             enhancedSegments.push(segmentLinePoints[0]);
         }
         if (lastLine) {
+            console.log(`Обработка пересечения сегментов ${i - 1} и ${i}`);
             const intersection = findIntersection(lastLine, segmentLine);
-            if (isIntersectionValid(intersection, lastLine.endPoint, segmentLinePoints[0])) {
+            // Проверяем, совпадают ли точки
+            const pointsAreSame = Math.abs(lastLine.endPoint.x - segmentLinePoints[0].x) < 0.001 &&
+                Math.abs(lastLine.endPoint.y - segmentLinePoints[0].y) < 0.001;
+            if (pointsAreSame) {
+                console.log(`Точки сегментов ${i - 1} и ${i} совпадают, пропускаем проверку на пересечение`);
+                enhancedSegments.push(segmentLinePoints[0]);
+            }
+            else if (isIntersectionValid(intersection, lastLine.endPoint, segmentLinePoints[0])) {
+                console.log(`Валидное пересечение для сегментов ${i - 1} и ${i}:`, intersection);
                 enhancedSegments.push(intersection);
             }
             else {
                 // Усреднение
-                console.log(`УСредненение lastLine${lastLine.endPoint.y}`);
-                console.log(`УСредненение  segmentLinePoints ${segmentLinePoints[0].y}`);
+                console.log(`Пересечение невалидно, усреднение точек между сегментами ${i - 1} и ${i}`);
+                console.log(`Усреднение lastLine.endPoint:`, lastLine.endPoint);
+                console.log(`Усреднение segmentLinePoints[0]:`, segmentLinePoints[0]);
                 enhancedSegments.push({
                     x: (lastLine.endPoint.x + segmentLinePoints[0].x) / 2,
                     y: (lastLine.endPoint.y + segmentLinePoints[0].y) / 2
@@ -92,6 +104,7 @@ const enhancedSegmentApproximation = (points, epsilon) => {
         }
         lastLine = segmentLine;
         if (nextSegmentCombined) {
+            // console.log(`Сегмент ${i} был объединен со следующим сегментом`);
             i++; // Пропускаем следующий сегмент, так как он уже объединен
         }
         if (i === segmentsBoundaries.length - 2) {
@@ -99,6 +112,7 @@ const enhancedSegmentApproximation = (points, epsilon) => {
         }
         i++;
     }
+    // console.log(`enhancedSegmentApproximation: Enhanced segments: ${JSON.stringify(enhancedSegments)}`);
     return enhancedSegments;
 };
 export default enhancedSegmentApproximation;

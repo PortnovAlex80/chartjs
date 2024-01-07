@@ -1,4 +1,4 @@
-import leastSquaresWeightedFilter from '../filters/leastSquaresWeightedFilter.js';
+import leastSquaresFilter from '../filters/leastSquaresFilter.js';
 import { IPoint } from '../interfaces/IPoint';
 
 export class CubicPolynomialApproximation {
@@ -257,7 +257,7 @@ export class CubicPolynomialApproximation {
     private generatePointsOnLeastSquaresLine(): IPoint[] {
         // Get the start and end points of the least squares line
         // console.log(`Least filter got ${this.points.length}`)
-        this.approximaredLeastSWPoints = leastSquaresWeightedFilter(this.points);
+        this.approximaredLeastSWPoints = leastSquaresFilter(this.points);
 
         if (this.approximaredLeastSWPoints.length < 2) {
             throw new Error("leastSquaresWeightedFilter did not return enough points.");
