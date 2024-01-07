@@ -5,7 +5,7 @@ export class CubicPolynomialApproximation {
     private coefficients: number[];
     private points: IPoint[];
     private approximatedPoints: IPoint[];
-    private errorThreshold = 0.25; // Threshold for error
+    private errorThreshold = 0.40; // Threshold for rude error 
     private approximaredLeastSWPoints: IPoint[];
 
     constructor() {
@@ -30,11 +30,13 @@ export class CubicPolynomialApproximation {
         // let extremes = this.calculateExtremes(0.1)
 
         // Remove points with high error and re-approximate if necessary
-        let highErrorPoints = this.identifyHighErrorPoints();
-        if (highErrorPoints.length > 0) {
-            this.points = this.points.filter(p => !highErrorPoints.includes(p));
-            this.performApproximation();
-        }
+        // let highErrorPoints = this.identifyHighErrorPoints();
+        // if (highErrorPoints.length > 0) {
+        //     console.log(`Points cleaned - ${this.points.length}`);
+        //     this.points = this.points.filter(p => !highErrorPoints.includes(p));
+        //     this.performApproximation();
+        //     console.log(`Points was cleaned - ${this.points.length}`);
+        // }
 
         
 
@@ -48,7 +50,7 @@ export class CubicPolynomialApproximation {
         this.removeDuplicatesAndSort();
     
         let bestSegments: IPoint[][] = [];
-        const minSegmentLength = 1; // Минимальная длина сегмента
+        const minSegmentLength = 0.4; // Минимальная длина сегмента
     
         const calculateSegmentLength = (segment: IPoint[]): number => {
             if (segment.length < 2) return 0;
@@ -61,7 +63,7 @@ export class CubicPolynomialApproximation {
         while (start < pointsCopy.length - 1) {
             let end = start + 1;
             let lastValidSegment = null;
-            console.log(`Цикл первый`);
+            // console.log(`Цикл первый`);
     
             // Наращиваем длину сегмента до минимально допустимой
             while (end < pointsCopy.length && calculateSegmentLength(pointsCopy.slice(start, end + 1)) < minSegmentLength) {
@@ -74,6 +76,7 @@ export class CubicPolynomialApproximation {
                 // console.log(`Рассмотрение сегмента от ${segment[0].x} до ${segment[segment.length - 1].x}`);
     
                 this.approximate(segment);
+                // console.log(`Points for Least in segment: ${this.points}`)
                 this.approximaredLeastSWPoints = this.generatePointsOnLeastSquaresLine();
                 const polynomialRMSE = this.calculateRMSE();
                 const lineRMSE = this.calculateRMSELeastSquaresWeighted();
@@ -84,31 +87,20 @@ export class CubicPolynomialApproximation {
         // console.log(`Расчет производной в последней точке сегмента - ${derivativeAtEnd}`)
         // && Math.abs(derivativeAtEnd) < threshold_rmse
 
-                const threshold_rmse = 0.070
-                if (polynomialRMSE < threshold_rmse && lineRMSE < threshold_rmse && diffRMSE < 0.012  )  {
+                const threshold_rmse = 0.055
+                if (polynomialRMSE < threshold_rmse && lineRMSE < threshold_rmse && diffRMSE < 0.005 )  {
                     lastValidSegment = segment;
                     this.points = lastValidSegment;
-                    console.log(`Продолжаем увеличивать сегмент:`);
-                    console.log(`Качество полинома RMSE - ${polynomialRMSE} ${polynomialRMSE < 0.075 ? "(высокое качество)" : "(ошибка вписывания)"}`);
-                    console.log(`Качество прямой RMSE - ${lineRMSE} ${lineRMSE < 0.075 ? "(высокое качество)" : "(ошибка вписывания)"}`);
-                    console.log(`Взаимное отклонение прямой и полинома RMSE - ${diffRMSE} ${diffRMSE < 0.075 ? "(высокое качество)" : "(ошибка вписывания)"}`);
-             
                     end++; // Продолжаем увеличивать сегмент
                 } else {
-                    console.log(`Сегмент завершен`)
-                    console.log(`Коэффициенты эффективности вписывания`);
-    
-                    console.log(`Качество полинома RMSE - ${polynomialRMSE} ${polynomialRMSE < 0.075 ? "(высокое качество)" : "(ошибка вписывания)"}`);
-                    console.log(`Качество прямой RMSE - ${lineRMSE} ${lineRMSE < 0.075 ? "(высокое качество)" : "(ошибка вписывания)"}`);
-                    console.log(`Взаимное отклонение прямой и полинома RMSE - ${diffRMSE} ${diffRMSE < 0.075 ? "(высокое качество)" : "(ошибка вписывания)"}`);
-             
+       
                     break; // Прерываем, если сегмент не удовлетворяет условиям
                 }
             }
     
             if (lastValidSegment) {
                 bestSegments.push(lastValidSegment);
-                console.log(`Найден подходящий сегмент от ${lastValidSegment[0].x} до ${lastValidSegment[lastValidSegment.length - 1].x}`);
+                // console.log(`Найден подходящий сегмент от ${lastValidSegment[0].x} до ${lastValidSegment[lastValidSegment.length - 1].x}`);
                 start = lastValidSegment.length + start - 1; // Обновляем start для следующего цикла
             } else {
                 start++; // Если подходящий сегмент не найден, переходим к следующей точке
@@ -278,7 +270,7 @@ export class CubicPolynomialApproximation {
 
     private generatePointsOnLeastSquaresLine(): IPoint[] {
         // Get the start and end points of the least squares line
-        console.log(`Least filter got ${this.points.length}`)
+        // console.log(`Least filter got ${this.points.length}`)
         this.approximaredLeastSWPoints = leastSquaresWeightedFilter(this.points);
 
         if (this.approximaredLeastSWPoints.length < 2) {
@@ -404,6 +396,11 @@ export class CubicPolynomialApproximation {
 
         return finePoints;
     }
+
+    getY(x: number): number {
+        return this.coefficients.reduce((sum, coeff, index) => sum + coeff * Math.pow(x, index), 0);
+      }
+      
 
     calculateExtremes(step: number): IPoint[] {
         const finePoints = this.fineCubePolynomialApproximation(step);

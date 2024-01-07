@@ -27,6 +27,9 @@ import enhancedSplitAndMergeFilter from '../filters/enhancedSplitAndMergeFilter.
 import recursiveSegmentationEntryPoint from '../filters/recursiveCubicPolynomeSegmentation.js';
 import { CubicPolynomialApproximation } from '../classes/CubicPolynomialApproximation.js';
 import medianFilter from '../filters/medianFilter.js';
+// import enhancedMedianFilter from '../filters/newMedianFilter.js';
+import enhancedMedianFilter from '../filters/enhancedMedianFilter.js';
+import enhancedNormalizer from '../filters/enhancedNormalizer.js';
 
 
 export default async function ChartDataAggregator(csvpoints: IPoint[], coordinateA: number, coordinateB: number): Promise<IDataSet[]> {
@@ -45,13 +48,18 @@ export default async function ChartDataAggregator(csvpoints: IPoint[], coordinat
     // const recursiveCubicPolynomeSegmentationPoints = recursiveSegmentationEntryPoint(rangedPoints);
     // console.log(recursiveCubicPolynomeSegmentationPoints);
     const medianFilterPoints = medianFilter(rangedPoints, 1);
+    const enhancedMedianFilterPoints = enhancedMedianFilter(rangedPoints);
+    console.log(`New media - ${rangedPoints.length}`);
+    let newMedianFilterPoints = enhancedMedianFilter(rangedPoints, 5)
+    // newMedianFilterPoints = enhancedMedianFilter(newMedianFilterPoints, 5)
+    console.log(`New after media - ${newMedianFilterPoints.length}`);
    
     
     // Devs graph
     const fineCubePolynomialApproximation = new CubicPolynomialApproximation();
     let clearingPoints = fineCubePolynomialApproximation.cleanPointsFromOutliers(rangedPoints);
     // const approximatedPoints = fineCubePolynomialApproximation.approximate(rangedPoints);
-    const loperccc = fineCubePolynomialApproximation.findQualitySegments(rangedPoints);
+    const loperccc = fineCubePolynomialApproximation.findQualitySegments(newMedianFilterPoints);
 
     
     const finePointsPolynomial = fineCubePolynomialApproximation.fineCubePolynomialApproximation(0.1);
@@ -61,18 +69,26 @@ export default async function ChartDataAggregator(csvpoints: IPoint[], coordinat
     // sections.push({ label: "Extremes",      points: extremesFinePoints1, showLine:true, fill: false, backgroundColor: 'red'});
     // sections.push({ label: "Extremes",      points: extremesFinePoints2, showLine:true, fill: false, backgroundColor: 'green'});
 
-
-    sections.push({ label: "enhanced", points: enhancedSegmentApproximation(rangedPoints, 0.1), showLine: true, tension: 0, fill: false, borderColor: 'green', backgroundColor: 'green' });
-    sections.push({ label: "finePointsPolynomial",      points: finePointsPolynomial, showLine:true, fill: false, backgroundColor: 'blue'});
-    sections.push({ label: "ТЛО",      points: clearingPoints, showLine:false, fill: false, backgroundColor: 'grey'});
+    // sections.push({ label: "ТЛО new median",      points: newMedianFilterPoints, showLine:false, fill: false, backgroundColor: 'red'});
+    
+    // sections.push({ label: "ТЛО normalizre and echancedMF",      points: enhancedNormalizer(enhancedMedianFilterPoints), showLine:false, fill: false, backgroundColor: 'blue'});
+    sections.push({ label: "enhancedMedianFilterPoints",      points: enhancedMedianFilterPoints, showLine:false, fill: false, backgroundColor: 'blue'});
+    
+    sections.push({ label: "enhanced", points: enhancedSegmentApproximation((enhancedMedianFilterPoints), 0.1), showLine: true, tension: 0, fill: false, borderColor: 'green', backgroundColor: 'green' });
+    // sections.push({ label: "finePointsPolynomial",      points: finePointsPolynomial, showLine:true, fill: false, backgroundColor: 'blue'});
+    sections.push({ label: "ТЛО",      points: rangedPoints, showLine:false, fill: false, backgroundColor: 'grey'});
+   
+   
+   
+   
+   
     // sections.push({ label: "LeastSQRWeight", points: approximatedWeighted, showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
-console.log(loperccc);
+// console.log(loperccc);
 //    sections.push({ label: "Best", points: loperccc, showLine: true, tension: 0, fill: false, borderColor: 'red', backgroundColor: 'red' });
         // sections.push({ label: "clean", points: clearingPoints, showLine: true, tension: 0, fill: false, borderColor: 'blue', backgroundColor: 'blue' });
     
         // sections.push({ label: "ТЛО median",      points: medianFilterPoints, showLine:false, fill: false, backgroundColor: 'red'});
-    // sections.push({ label: "ТЛО custome median",      points: customMedianFilterPoints, showLine:false, fill: false, backgroundColor: 'red'});
-    
+       
     
     // sections.push({ label: "Расширенный метод",      points: enhancedSplitAndMergeFilter(rangedPoints, 0.2), showLine:true, fill: false, tension: 0, borderColor: 'green',backgroundColor: 'green'});
     // sections.push({ label: "Расширенный метод",      points: recursiveCubicPolynomeSegmentationPoints, showLine:true, fill: false, tension: 0, borderColor: 'green',backgroundColor: 'green'});

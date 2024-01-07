@@ -21,8 +21,16 @@ const findIntersection = (line1: { slope: number; intercept: number }, line2: { 
 };
 
 function isIntersectionValid(intersection: IPoint, segment1End: IPoint, segment2Start: IPoint): boolean {
-    return intersection.x > segment1End.x && intersection.x < segment2Start.x;
+    const isXValid = intersection.x > segment1End.x && intersection.x < segment2Start.x;
+    const minY = Math.min(segment1End.y, segment2Start.y);
+    const maxY = Math.max(segment1End.y, segment2Start.y);
+    const isYValid = intersection.y >= minY && intersection.y <= maxY;
+
+    return isXValid && isYValid;
 }
+
+
+
 const tryMergeSegments = (segment1: IPoint[], segment2: IPoint[], epsilon: number): IPoint[] | null => {
     const combinedSegmentData = [...segment1, ...segment2];
     const segmentLinePoints = leastSquaresFilter(combinedSegmentData);
@@ -40,8 +48,24 @@ const tryMergeSegments = (segment1: IPoint[], segment2: IPoint[], epsilon: numbe
 };
 
 
-// Функция для улучшенной аппроксимации сегментов
+/**
+ * Модуль для улучшенной аппроксимации сегментов.
+ * Этот модуль использует комбинацию различных алгоритмов фильтрации и аппроксимации для
+ * обработки набора точек. Он включает в себя попытки объединения сегментов на основе
+ * линейной аппроксимации, а также улучшенные методы разбиения и слияния сегментов.
+ * 
+ * Процесс аппроксимации включает в себя следующие этапы:
+ * 1. Разбиение точек на сегменты с использованием улучшенного алгоритма разбиения и слияния.
+ * 2. Попытка объединения последовательных сегментов на основе критерия минимальной погрешности.
+ * 3. Применение взвешенного метода наименьших квадратов к каждому сегменту.
+ * 4. Обработка точек пересечения между сегментами для обеспечения плавности переходов.
+ * 
+ * @param {IPoint[]} points - Массив точек для аппроксимации.
+ * @param {number} epsilon - Пороговое значение погрешности для различных этапов аппроксимации.
+ * @returns {IPoint[]} Массив точек, представляющих улучшенную аппроксимацию исходного набора данных.
+ */
 const enhancedSegmentApproximation: IFilter = (points: IPoint[], epsilon: number): IPoint[] => {
+    // выбор механизма сегментирования:
     // const segmentsBoundaries = enhancedSplitAndMergeFilter(points, epsilon);
     const segmentsBoundaries = new CubicPolynomialApproximation().findQualitySegments(points);
     // const segmentsBoundaries = splitAndMergeFilter(points, epsilon);
@@ -85,6 +109,9 @@ const enhancedSegmentApproximation: IFilter = (points: IPoint[], epsilon: number
                 enhancedSegments.push(intersection);
             } else {
                 // Усреднение
+                console.log(`УСредненение lastLine${lastLine.endPoint.y}`);
+
+                console.log(`УСредненение  segmentLinePoints ${segmentLinePoints[0].y}`);
                 enhancedSegments.push({
                     x: (lastLine.endPoint.x + segmentLinePoints[0].x) / 2,
                     y: (lastLine.endPoint.y + segmentLinePoints[0].y) / 2

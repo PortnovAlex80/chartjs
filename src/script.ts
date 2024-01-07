@@ -83,6 +83,8 @@ function initializeEventHandlers() {
   const decreaseAButton = document.getElementById('decreaseA') as HTMLButtonElement | null;
   const increaseBButton = document.getElementById('increaseB') as HTMLButtonElement | null;
   const decreaseBButton = document.getElementById('decreaseB') as HTMLButtonElement | null;
+  const moveLeftButton = document.getElementById('moveLeft') as HTMLButtonElement | null;;
+  const moveRightButton = document.getElementById('moveRight') as HTMLButtonElement | null;;
 
   if (coordAInput && coordBInput && increaseAButton && decreaseAButton && increaseBButton && decreaseBButton) {
     increaseAButton.addEventListener('click', () => {
@@ -102,6 +104,20 @@ function initializeEventHandlers() {
 
     decreaseBButton.addEventListener('click', () => {
       coordBInput.value = (parseFloat(coordBInput.value) - 1).toString();
+      updateCoordinates(parseFloat(coordAInput.value), parseFloat(coordBInput.value));
+    });
+  }
+
+  if (coordAInput && coordBInput && moveLeftButton && moveRightButton) {
+    moveLeftButton.addEventListener('click', () => {
+      coordAInput.value = (parseFloat(coordAInput.value) - 1).toString();
+      coordBInput.value = (parseFloat(coordBInput.value) - 1).toString();
+      updateCoordinates(parseFloat(coordAInput.value), parseFloat(coordBInput.value));
+    });
+
+    moveRightButton.addEventListener('click', () => {
+      coordAInput.value = (parseFloat(coordAInput.value) + 1).toString();
+      coordBInput.value = (parseFloat(coordBInput.value) + 1).toString();
       updateCoordinates(parseFloat(coordAInput.value), parseFloat(coordBInput.value));
     });
   }
