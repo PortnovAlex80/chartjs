@@ -21,6 +21,17 @@ const leastSquaresFilter = (points) => {
     const lastPoint = points[points.length - 1];
     const approximatedFirstPoint = { x: firstPoint.x, y: firstPoint.x * slope + intercept };
     const approximatedLastPoint = { x: lastPoint.x, y: lastPoint.x * slope + intercept };
+    // Расчет RMSE
+    function calculateRMSE(points, slope, intercept) {
+        let sumOfSquares = 0;
+        for (const point of points) {
+            const yPredicted = slope * point.x + intercept;
+            sumOfSquares += Math.pow(point.y - yPredicted, 2);
+        }
+        return Math.sqrt(sumOfSquares / points.length);
+    }
+    const rmse = calculateRMSE(points, slope, intercept);
+    // console.log(`RMSE: ${rmse}`);
     return [approximatedFirstPoint, approximatedLastPoint];
 };
 export default leastSquaresFilter;

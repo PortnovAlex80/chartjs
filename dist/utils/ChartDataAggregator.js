@@ -12,6 +12,7 @@ import enhancedSegmentApproximation from '../filters/enhancedSegmentApproximatio
 import orderByXFilter from '../filters/orderByXFilter.js';
 import filterXRange from '../filters/filterXRange.js';
 import weightedGroundLevelMedianFilter from '../filters/weightedGroundLevelMedianFilter.js';
+import { CubicPolynomialApproximation } from '../classes/CubicPolynomialApproximation.js';
 /**
  * Модуль ChartDataAggregator агрегирует и обрабатывает данные для визуализации графиков.
  * Он принимает необработанные точки из CSV-файла и координаты для фильтрации данных,
@@ -30,11 +31,32 @@ export default function ChartDataAggregator(csvpoints, coordinateA, coordinateB)
         // Фильтрация и сортировка точек по оси X
         const orderByXPoints = orderByXFilter(csvpoints);
         const rangedPoints = filterXRange(orderByXPoints, coordinateA, coordinateB);
+        // Работающий набор
         // Применение взвешенного медианного фильтра по уровню земли
         const weightedGroundLevelMedianFilterPoints = weightedGroundLevelMedianFilter(rangedPoints);
-        sections.push({ label: "Весовой фильтр по уровню земли", points: weightedGroundLevelMedianFilterPoints, showLine: false, fill: false, backgroundColor: 'red' });
+        // sections.push({ label: "Весовой фильтр по уровню земли", points: weightedGroundLevelMedianFilterPoints, showLine: false, fill: false, backgroundColor: 'red' });
         // Применение улучшенного сегментного аппроксиматора к отфильтрованным данным
-        sections.push({ label: "Алгоритм Enhanced-18", points: enhancedSegmentApproximation(weightedGroundLevelMedianFilterPoints, 0.1), showLine: true, tension: 0, fill: false, borderColor: 'green', backgroundColor: 'green' });
+        sections.push({ label: "Алгоритм Enhanced-18", points: enhancedSegmentApproximation(weightedGroundLevelMedianFilterPoints, 0.20), showLine: true, tension: 0, fill: false, borderColor: 'green', backgroundColor: 'green' });
+        // Дополнительные наборы
+        // const segmentsBoundaries = new CubicPolynomialApproximation().findQualitySegments(rangedPoints);
+        // sections.push({ label: "findQualitySegments", points: segmentsBoundaries, showLine: true, fill: false, backgroundColor: 'blue' , borderColor: 'blue'});
+        // Создание экземпляра LeastSquaresFilter и аппроксимация точек
+        // const leastSquares = new LeastSquaresFilter(weightedGroundLevelMedianFilterPoints);
+        // const leastPoints = leastSquares.approximatePoints();
+        // console.log(`Least rmse ${leastSquares.rmse}`)
+        // sections.push({
+        //     label: "leastPoints",
+        //     points: leastPoints,
+        //     showLine: true,
+        //     fill: false,
+        //     backgroundColor: 'blue',
+        //     borderColor: 'blue', // Цвет линии
+        //     borderDash: [5, 5] // Стиль пунктирной линии: чередование 5 пикселей линии и 5 пикселей пропуска
+        // });
+        const fineCubePolynomialApproximationLine = new CubicPolynomialApproximation();
+        const cubePolyPoints = fineCubePolynomialApproximationLine.findRandomQualitySegments(weightedGroundLevelMedianFilterPoints);
+        sections.push({ label: "Линии Чистой апроксимации", points: cubePolyPoints, showLine: true, tension: 0, fill: false, borderColor: 'purple', backgroundColor: 'purple' });
+        console.log(`Fine rmse ${fineCubePolynomialApproximationLine.rmse}`);
         // Добавление исходных точек для сравнения
         sections.push({ label: "ТЛО", points: rangedPoints, showLine: false, fill: false, backgroundColor: 'grey' });
         // Формирование метки для каждого набора данных

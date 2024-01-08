@@ -30,13 +30,30 @@ function isIntersectionValid(intersection: IPoint, segment1End: IPoint, segment2
         const isYValid = intersection.y >= minY && intersection.y <= maxY;
 
         return isXValid && isYValid;
-
 }
 
+function perpendicularDistance(pointA: IPoint, pointB: IPoint, pointC: IPoint): number {
+    let area = Math.abs(0.5 * (pointA.x * (pointB.y - pointC.y) + pointB.x * (pointC.y - pointA.y) + pointC.x * (pointA.y - pointB.y)));
+    let bottom = Math.hypot(pointA.x - pointB.x, pointA.y - pointB.y);
+    return (area / bottom) * 2;
+}
 
+function canMergeSegments(segment1: IPoint[], segment2: IPoint[], epsilon: number): boolean {
+    let combinedSegment = [segment1[0], segment2[segment2.length - 1]]; // Используем первую точку первого сегмента и последнюю точку второго сегмента
+    for (let point of segment1.concat(segment2)) {
+        let perpendicularDistanceSegments = perpendicularDistance(combinedSegment[0], combinedSegment[1], point);
+        // console.log(`Distance is ${perpendicularDistanceSegments} and this is ${((perpendicularDistanceSegments) > epsilon)}`)
+        if ((perpendicularDistanceSegments) > epsilon) {
+            return false;
+        }
+    }
+    // console.log(`Can merge`)
+    return true;
+}
 
 const tryMergeSegments = (segment1: IPoint[], segment2: IPoint[], epsilon: number): IPoint[] | null => {
     const combinedSegmentData = [...segment1, ...segment2];
+    // console.log(`combinedSegmentData - ${JSON.stringify(combinedSegmentData)}`)
     const segmentLinePoints = leastSquaresFilter(combinedSegmentData);
     const segmentLine = lineFromPoints(segmentLinePoints[0], segmentLinePoints[1]);
 
@@ -70,7 +87,9 @@ const tryMergeSegments = (segment1: IPoint[], segment2: IPoint[], epsilon: numbe
 const enhancedSegmentApproximation: IFilter = (points: IPoint[], epsilon: number): IPoint[] => {
     // выбор механизма сегментирования:
     // const segmentsBoundaries = splitAndMergeFilter(points, epsilon);
-    const segmentsBoundaries = new CubicPolynomialApproximation().findQualitySegments(points);
+    // const segmentsBoundaries = new CubicPolynomialApproximation().findQualitySegments(points);
+    const segmentsBoundaries = new CubicPolynomialApproximation().findRandomQualitySegments(points);
+    
 
     segmentsBoundaries.forEach(point => { console.log(`${JSON.stringify(point)}`)})
 
@@ -130,9 +149,15 @@ const enhancedSegmentApproximation: IFilter = (points: IPoint[], epsilon: number
                 console.log(`Усреднение lastLine.endPoint:`, lastLine.endPoint);
                 console.log(`Усреднение segmentLinePoints[0]:`, segmentLinePoints[0]);
         
+                // enhancedSegments.push({
+                //     x: (lastLine.endPoint.x + segmentLinePoints[0].x) / 2,
+                //     y: (lastLine.endPoint.y + segmentLinePoints[0].y) / 2
+                // });
+
+
                 enhancedSegments.push({
-                    x: (lastLine.endPoint.x + segmentLinePoints[0].x) / 2,
-                    y: (lastLine.endPoint.y + segmentLinePoints[0].y) / 2
+                    x: (segmentLinePoints[0].x),
+                    y: (segmentLinePoints[0].y)
                 });
             }
         }

@@ -7,12 +7,14 @@ export class CubicPolynomialApproximation {
     private approximatedPoints: IPoint[];
     private errorThreshold = 0.40; // Threshold for rude error 
     private approximaredLeastSWPoints: IPoint[];
+    public rmse: number;
 
     constructor() {
         this.coefficients = []; // коэф полинома
         this.points = []; // входной набор данных
         this.approximatedPoints = []; // набор упорядоченных точек полинома
         this.approximaredLeastSWPoints = [];
+        this.rmse = 1000;
     }
 
     approximate(points: IPoint[]): IPoint[] {
@@ -33,10 +35,15 @@ export class CubicPolynomialApproximation {
         console.log(`findQualitySegments вызвана с ${inputPoints.length} точками`);
         let pointsCopy = [...inputPoints];// Создаем копию массива точек
         this.points = inputPoints;
+
+        
         this.removeDuplicatesAndSort();
+
+        const threshold_rmse = 0.2;
+        const threshold_diffRMSE = 0.015;
     
         let bestSegments: IPoint[][] = [];
-        const minSegmentLength = 0.20; // Минимальная длина сегмента
+        const minSegmentLength = 1.0; // Минимальная длина сегмента
     
         const calculateSegmentLength = (segment: IPoint[]): number => {
             if (segment.length < 2) return 0;
@@ -51,37 +58,58 @@ export class CubicPolynomialApproximation {
             let lastValidSegment = null;
             // console.log(`Цикл первый`);
     
-            // Наращиваем длину сегмента до минимально допустимой
-            while (end < pointsCopy.length && calculateSegmentLength(pointsCopy.slice(start, end + 1)) < minSegmentLength) {
-                end++;
-            }
+            // Наращиваем длину сегмента до минимально допустимой - пока отказался от этой стратегии
+            // while (end < pointsCopy.length && calculateSegmentLength(pointsCopy.slice(start, end + 1)) < minSegmentLength) {
+            //     end++;
+            // }
     
             // Проверяем удовлетворяют ли условиям более длинные сегменты
+            let cnt = 0
             while (end < pointsCopy.length) {
+                
                 let segment = pointsCopy.slice(start, end + 1);
                 // console.log(`Рассмотрение сегмента от ${segment[0].x} до ${segment[segment.length - 1].x}`);
     
                 this.approximate(segment);
                 // console.log(`Points for Least in segment: ${this.points}`)
                 this.approximaredLeastSWPoints = this.generatePointsOnLeastSquaresLine();
-                const polynomialRMSE = this.calculateRMSE();
+                const polynomialRMSE = this.rmse;
                 const lineRMSE = this.calculateRMSELeastSquaresWeighted();
                 const diffRMSE = this.calculateAbsDiffRmse();
+                
+                // console.log(`Микросегмент`)
+                // console.log(`Polynomial RMSE: ${polynomialRMSE}`);
+                // console.log(`Line RMSE: ${lineRMSE}`);
+                // console.log(`Difference RMSE: ${diffRMSE}`);
+                // console.log(`cnt - ${cnt}`);
+        
 
-        //         // Расчет производной в последней точке сегмента
-        // const derivativeAtEnd = this.calculateApproximateDerivative();
-        // console.log(`Расчет производной в последней точке сегмента - ${derivativeAtEnd}`)
-        // && Math.abs(derivativeAtEnd) < threshold_rmse
+                let threshold_diffRMSE_current = threshold_diffRMSE;
+                    
+                if (lineRMSE < (threshold_rmse / 2)) {
+                    // Если lineRMSE меньше половины порога, удваиваем порог для diffRMSE
+                    threshold_diffRMSE_current =  (threshold_diffRMSE * 1.0);
+                }
 
-                const threshold_rmse = 0.055
-                if (polynomialRMSE < threshold_rmse && lineRMSE < threshold_rmse && diffRMSE < 0.005 )  {
+                // console.log(`в допуске? - ${(polynomialRMSE < threshold_rmse && lineRMSE < threshold_rmse && diffRMSE < threshold_diffRMSE )} `)
+                if (polynomialRMSE < threshold_rmse && lineRMSE < threshold_rmse && diffRMSE < threshold_diffRMSE_current)  {
+                   
                     lastValidSegment = segment;
                     this.points = lastValidSegment;
+                    // console.log(`add ++ segment`)
+                    // console.log(`valid segment - ${JSON.stringify(lastValidSegment)}`)
+                    
                     end++; // Продолжаем увеличивать сегмент
                 } else {
-       
+                    // console.log(`Сегмент уже не в допуске - ${cnt}`);
+                    // console.log(`Polynomial RMSE: ${polynomialRMSE}`);
+                    // console.log(`Line RMSE: ${lineRMSE}`);
+                    console.log(`Difference RMSE: ${diffRMSE}`);
+                    // console.log(`cnt - ${cnt}`);
                     break; // Прерываем, если сегмент не удовлетворяет условиям
                 }
+
+                ++cnt
             }
     
             if (lastValidSegment) {
@@ -91,8 +119,11 @@ export class CubicPolynomialApproximation {
             } else {
                 start++; // Если подходящий сегмент не найден, переходим к следующей точке
             }
+            // console.log(`Spline rmse ${this.rmse}`)
         }
     
+
+
         let combinedSegments: IPoint[] = [];
         bestSegments.forEach((segment, index) => {
             if (segment.length > 0) {
@@ -107,84 +138,18 @@ export class CubicPolynomialApproximation {
                 }
             }
         });
-        
-        
-        console.log(`Найдено подходящих сегментов: ${bestSegments.length}`);
+
+        // console.log(`Найдено подходящих сегментов: ${bestSegments.length}`);
+
+        // Перебираем combinedSegments, пытаясь объединить сегменты
+        // console.log(`Итоговый бест: ${JSON.stringify(bestSegments)}`);
+
+        // console.log(`Итоговый сегмент: ${JSON.stringify(combinedSegments)}`);
+
         return combinedSegments;
     
     }
     
-
-    // Метод для расчета приближенной производной
-    calculateApproximateDerivative(): number {
-        const segment = this.fineCubePolynomialApproximation(0.1);
-
-    console.log(`segmetn der - ${segment.length}`)
-        if (segment.length < 2) {
-
-            return 1;
-            throw new Error("Для расчета производной нужно как минимум две точки.");
-        }
-        const lastPoint = segment[segment.length - 1];
-        const secondLastPoint = segment[segment.length - 2];
-        const dy = lastPoint.y - secondLastPoint.y;
-        const dx = lastPoint.x - secondLastPoint.x;
-
-        if (dx === 0) {
-            throw new Error("Горизонтальное расстояние между точками равно нулю.");
-        }
-
-        return dy / dx;
-    }
-
-    cleanPointsFromOutliers(originalPoints: IPoint[]): IPoint[] {
-        let cleanedPoints: IPoint[] = [];
-        let start = 0;
-        const segmentLength: number = 2;
-
-        while (start < originalPoints.length) {
-            // Определяем конец текущего сегмента
-            let end = start;
-            while (end < originalPoints.length && this.calculateSegmentLength(originalPoints.slice(start, end + 1)) < segmentLength) {
-                end++;
-            }
-
-            // Выбираем сегмент для аппроксимации
-            let segment = originalPoints.slice(start, end + 1);
-            this.approximate(segment);
-
-            // Идентификация и удаление выбросов
-            let highErrorPoints = this.identifyHighErrorPoints();
-            cleanedPoints.push(...segment.filter(p => !highErrorPoints.includes(p)));
-
-            start = end + 1;
-        }
-
-        return cleanedPoints;
-    }
-
-    calculateR2(): number {
-        const yActual = this.points.map(p => p.y);
-        const yMean = yActual.reduce((a, b) => a + b, 0) / yActual.length;
-        const yPredicted = this.approximatedPoints.map(p => p.y);
-
-        const totalSumOfSquares = yActual.reduce((sum, yi) => sum + Math.pow((yi - yMean), 2), 0);
-        const residualSumOfSquares = yActual.reduce((sum, yi, index) => sum + Math.pow((yi - yPredicted[index]), 2), 0);
-
-        const rSquared = 1 - (residualSumOfSquares / totalSumOfSquares);
-
-        return rSquared;
-    }
-    
-    private calculateSegmentLength(segment: IPoint[]): number {
-        const calculateSegmentLength = (segment: IPoint[]): number => {
-            if (segment.length < 2) return 0;
-            const dx = segment[segment.length - 1].x - segment[0].x;
-            const dy = segment[segment.length - 1].y - segment[0].y;
-            return Math.sqrt(dx * dx + dy * dy);
-        };
-        return calculateSegmentLength(segment);
-    }
     
     logger(): void {
         this.approximaredLeastSWPoints = this.generatePointsOnLeastSquaresLine();
@@ -280,21 +245,6 @@ export class CubicPolynomialApproximation {
 
         return linePoints;
     }
-
-    private removeDuplicatesAndSort() {
-        this.points = this.points
-            .filter((point, index, self) =>
-                index === self.findIndex(p => p.x === point.x && p.y === point.y))
-            .sort((a, b) => a.x - b.x);
-    }
-
-    private identifyHighErrorPoints(): IPoint[] {
-        return this.points.filter((point, index) => {
-            let approxPoint = this.approximatedPoints[index];
-            let diff = Math.abs(point.y - approxPoint.y);
-            return diff > this.errorThreshold;
-        });
-    }
    
     private performApproximation(): void {
         let x = this.points.map(p => p.x);
@@ -315,6 +265,8 @@ export class CubicPolynomialApproximation {
             x: xi,
             y: this.coefficients.reduce((sum, coeff, index) => sum + coeff * Math.pow(xi, index), 0)
         }))
+
+        this.rmse = this.calculateRMSE();
     }
 
     private solveLinearSystem(A: number[][], B: number[]): number[] {
@@ -366,7 +318,11 @@ export class CubicPolynomialApproximation {
         return x;
     } 
 
-    fineCubePolynomialApproximation(step: number): IPoint[] {
+    getY(x: number): number {
+        return this.coefficients.reduce((sum, coeff, index) => sum + coeff * Math.pow(x, index), 0);
+      }
+     
+      fineCubePolynomialApproximation(step: number): IPoint[] {
         if (this.coefficients.length === 0 || this.points.length === 0) {
             throw new Error("Коэффициенты полинома или набор точек не определены.");
         }
@@ -382,12 +338,6 @@ export class CubicPolynomialApproximation {
 
         return finePoints;
     }
-
-    getY(x: number): number {
-        return this.coefficients.reduce((sum, coeff, index) => sum + coeff * Math.pow(x, index), 0);
-      }
-      
-
     calculateExtremes(step: number): IPoint[] {
         const finePoints = this.fineCubePolynomialApproximation(step);
         let firstDerivatives = [];
@@ -494,82 +444,124 @@ export class CubicPolynomialApproximation {
     
         return secondDerivatives;
     }
-    
-    findMaxTurnPoint(): IPoint[] | null {
-        return this.findMaxTurnPointOfCubicPolynomial(this.coefficients);
+
+    private removeDuplicatesAndSort() {
+        this.points = this.points
+            .filter((point, index, self) =>
+                index === self.findIndex(p => p.x === point.x && p.y === point.y))
+            .sort((a, b) => a.x - b.x);
     }
 
-    findMaxTurnPointOfCubicPolynomial(coefficients: number[]): IPoint[] | null {
-        console.log("Коэффициенты полинома:", coefficients);
     
-        if (coefficients.length !== 4) {
-            console.error("Должно быть ровно 4 коэффициента для кубического полинома.");
-            return null;
+        findRandomQualitySegments(inputPoints: IPoint[]): IPoint[] {
+        if (inputPoints.length === 0) {
+            throw new Error("Массив точек не должен быть пустым.");
         }
     
-        const [a0, a1, a2, a3] = coefficients;
+        let pointsCopy = [...inputPoints];
+        this.removeDuplicatesAndSort();
     
-        console.log(`Коэффициенты полинома: a0=${a0}, a1=${a1}, a2=${a2}, a3=${a3}`);
+        const threshold_rmse = 0.2;
+        const threshold_diffRMSE = 0.015;
+        let remainingPoints = new Set(pointsCopy); // Используем Set для легкого исключения уже обработанных точек
     
-        // Первая производная и дискриминант
-        const a = 3 * a3;
-        const b = 2 * a2;
-        const c = a1;
-        const discriminant = b * b - 4 * a * c;
+        let bestSegments: IPoint[][] = [];
     
-        console.log(`Дискриминант: ${discriminant}`);
-
-        const turnPoints: IPoint[] = [];
-   
-       if (discriminant >= 0) {
-           const x1 = (-b + Math.sqrt(discriminant)) / (2 * a);
-           const x2 = (-b - Math.sqrt(discriminant)) / (2 * a);
-   
-           // Добавляем корни, если они не NaN
-           [x1, x2].forEach(x => {
-            console.log(`Корни есть, вот х: ${x}`);
-               if (!isNaN(x)) {
-                   turnPoints.push({ x, y: a3 * x * x * x + a2 * x * x + a1 * x + a0 });
-               }
-           });
-       }
-   
-       return turnPoints;
-
-        // if (discriminant < 0) {
-        //     console.log("Нет действительных корней.");
-        //     return null;
-        // } else {
-        //     const x1 = (-b + Math.sqrt(discriminant)) / (2 * a);
-        //     const x2 = (-b - Math.sqrt(discriminant)) / (2 * a);
+        console.log("START...")
+        let whilecnt = 100;
+        while (remainingPoints.size > 0) {
+            
+                if (whilecnt <0) {
+                    console.log(`выход из внешнего цикла`);
+                    break}
+                whilecnt--;
     
-        //     console.log(`Корни уравнения: x1=${x1}, x2=${x2}`);
+            // Выбираем случайную начальную точку из оставшихся
+            let startIdx = Math.floor(Math.random() * remainingPoints.size);
+            let startPoint = Array.from(remainingPoints)[startIdx];
+            console.log(`Start random point  ${JSON.stringify(startPoint)}`);
     
-            // let maxTurnAngle = 0;
-            // let maxTurnPoint: IPoint | null = null;
+            // Определяем индексы для исходного массива
+            let start = pointsCopy.indexOf(startPoint);
+            let end = start;
     
-            // [x1, x2].forEach(x => {
-            //     if (!isNaN(x)) {
-            //         const slope = 3 * a3 * x * x + 2 * a2 * x + a1;
-            //         const angle = Math.atan(Math.abs(slope));
+            let lastValidSegment = null;
+            let isGrowingLeft = true;
+            let isGrowingRight = true;
     
-            //         console.log(`x=${x}, slope=${slope}, angle=${angle}`);
+            // Расширяем сегмент влево и вправо, пока это возможно
+            let innerwhilecnt = 100;
+            while (isGrowingLeft || isGrowingRight) {
+                
+                if (innerwhilecnt <0 ) {
+                    console.log(`выход из внутреннего цикла`);
+                    break};
+                innerwhilecnt--;
     
-            //         if (angle > maxTurnAngle) {
-            //             maxTurnAngle = angle;
-            //             maxTurnPoint = { x, y: a3 * x * x * x + a2 * x * x + a1 * x + a0 };
-            //         }
-            //     }
-            // });
+                if (isGrowingLeft && start > 0) {
+                    start--;
+                } else {
+                    isGrowingLeft = false;
+                }
     
-            // if (maxTurnPoint) {
-            //     console.log("Максимальная точка поворота:", maxTurnPoint);
-            // } else {
-            //     console.log("Точка поворота не найдена.");
-            // }
+                if (isGrowingRight && end < pointsCopy.length - 1) {
+                    end++;
+                } else {
+                    isGrowingRight = false;
+                }
     
-            // return maxTurnPoint;
+                let segment = pointsCopy.slice(start, end + 1);
+                this.approximate(segment);
+                this.approximaredLeastSWPoints = this.generatePointsOnLeastSquaresLine();
+                const polynomialRMSE = this.rmse;
+                const lineRMSE = this.calculateRMSELeastSquaresWeighted();
+                const diffRMSE = this.calculateAbsDiffRmse();
+    
+                let threshold_diffRMSE_current = lineRMSE < (threshold_rmse / 2) ? threshold_diffRMSE * 1.5 : threshold_diffRMSE;
+    
+                if (polynomialRMSE < threshold_rmse && lineRMSE < threshold_rmse && diffRMSE < threshold_diffRMSE_current) {
+                    console.log(`Segment добавлен`)
+                    lastValidSegment = segment;
+                    isGrowingLeft = true;
+                    isGrowingRight = true;
+                } else {
+                    // Уменьшаем сегмент обратно, так как последнее расширение было неудачным
+                    if (isGrowingLeft) start++;
+                    if (isGrowingRight) end--;
+                    break;
+                }
+            }
+    
+            if (lastValidSegment) {
+                bestSegments.push(lastValidSegment);
+                // Исключаем точки этого сегмента из дальнейшего рассмотрения
+                lastValidSegment.forEach(point => remainingPoints.delete(point));
+            }
+    
+            if (remainingPoints.size === pointsCopy.length) {
+                // Если мы не смогли найти ни одного допустимого сегмента, прекращаем выполнение, чтобы избежать бесконечного цикла
+                break;
+            }
         }
-
+    
+        // Обработка полученных сегментов для получения итоговых точек
+        let combinedSegments: IPoint[] = [];
+        bestSegments.forEach((segment, index) => {
+            if (segment.length > 0) {
+                // Добавляем первую точку сегмента
+                combinedSegments.push(segment[0]);
+    
+                // Если это последний сегмент, добавляем также и последнюю точку
+                if (index === bestSegments.length - 1) {
+                    combinedSegments.push(segment[segment.length - 1]);
+                }
+            }
+        });
+    
+        // Сортируем итоговые точки по координате X
+        combinedSegments.sort((a, b) => a.x - b.x);
+        
+        return combinedSegments;
+    }
 
 }
