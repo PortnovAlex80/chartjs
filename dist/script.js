@@ -10,6 +10,30 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 // src/script.ts
 import { createLineChartData } from './chartDataGenerators/createLineChartData.js';
 import { createScatterChartData } from './chartDataGenerators/createScatterChartData.js';
+// Функция для отправки POST запроса на сервер
+function updateCoordinates(coordinateA, coordinateB) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const response = yield fetch('/update-coordinates', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ coordinateA, coordinateB })
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = yield response.json();
+            console.log(data.message);
+            // Здесь вызовите функцию для обновления графика
+            yield loadData(); // просто вызываем лоад дата и эта функция все сделает.
+        }
+        catch (error) {
+            console.error('Ошибка при обновлении координат:', error);
+        }
+    });
+}
 function loadData() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("START SCRIpt");
@@ -19,6 +43,7 @@ function loadData() {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = yield response.json();
+            console.log(`Длина данных ${data.length}`);
             const chartType = "scatter"; // 'line'-'scatter'
             let chartData;
             switch (chartType) {
@@ -41,8 +66,7 @@ function loadData() {
             }
             new Chart(ctx, {
                 type: chartType,
-                data: chartData,
-                options: {},
+                data: chartData
             });
         }
         catch (error) {
@@ -50,4 +74,51 @@ function loadData() {
         }
     });
 }
-window.addEventListener('load', loadData);
+// Функция для инициализации обработчиков событий
+function initializeEventHandlers() {
+    const coordAInput = document.getElementById('coordinateA');
+    const coordBInput = document.getElementById('coordinateB');
+    const increaseAButton = document.getElementById('increaseA');
+    const decreaseAButton = document.getElementById('decreaseA');
+    const increaseBButton = document.getElementById('increaseB');
+    const decreaseBButton = document.getElementById('decreaseB');
+    const moveLeftButton = document.getElementById('moveLeft');
+    ;
+    const moveRightButton = document.getElementById('moveRight');
+    ;
+    if (coordAInput && coordBInput && increaseAButton && decreaseAButton && increaseBButton && decreaseBButton) {
+        increaseAButton.addEventListener('click', () => {
+            coordAInput.value = (parseFloat(coordAInput.value) + 1).toString();
+            updateCoordinates(parseFloat(coordAInput.value), parseFloat(coordBInput.value));
+        });
+        decreaseAButton.addEventListener('click', () => {
+            coordAInput.value = (parseFloat(coordAInput.value) - 1).toString();
+            updateCoordinates(parseFloat(coordAInput.value), parseFloat(coordBInput.value));
+        });
+        increaseBButton.addEventListener('click', () => {
+            coordBInput.value = (parseFloat(coordBInput.value) + 1).toString();
+            updateCoordinates(parseFloat(coordAInput.value), parseFloat(coordBInput.value));
+        });
+        decreaseBButton.addEventListener('click', () => {
+            coordBInput.value = (parseFloat(coordBInput.value) - 1).toString();
+            updateCoordinates(parseFloat(coordAInput.value), parseFloat(coordBInput.value));
+        });
+    }
+    if (coordAInput && coordBInput && moveLeftButton && moveRightButton) {
+        moveLeftButton.addEventListener('click', () => {
+            coordAInput.value = (parseFloat(coordAInput.value) - 1).toString();
+            coordBInput.value = (parseFloat(coordBInput.value) - 1).toString();
+            updateCoordinates(parseFloat(coordAInput.value), parseFloat(coordBInput.value));
+        });
+        moveRightButton.addEventListener('click', () => {
+            coordAInput.value = (parseFloat(coordAInput.value) + 1).toString();
+            coordBInput.value = (parseFloat(coordBInput.value) + 1).toString();
+            updateCoordinates(parseFloat(coordAInput.value), parseFloat(coordBInput.value));
+        });
+    }
+}
+// Инициализация обработчиков событий при загрузке страницы
+window.addEventListener('load', () => {
+    initializeEventHandlers();
+    loadData();
+});

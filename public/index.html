@@ -4,11 +4,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>График</title>
+  <link rel="icon" href="/public/AppIcon.png" type="image/png">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
 </head>
 <body>
+  <style>
+    body {
+      background-image: url('/public/AppIcon.png');
+      background-repeat: no-repeat;
+      background-size: contain; /* Или используйте 'contain' для полного отображения изображения */
+    }
+  </style>
   <h1>График данных из CSV файла</h1>
   <canvas id="myChart"></canvas>
+  <div>
+    <label for="coordinateA">A:</label>
+    <input type="text" id="coordinateA" value="0">
+    <button id="increaseA">+</button>
+    <button id="decreaseA">-</button>
+  </div>
+  <div>
+    <label for="coordinateB">B:</label>
+    <input type="text" id="coordinateB" value="0">
+    <button id="increaseB">+</button>
+    <button id="decreaseB">-</button>
+  </div>
+  <div>
+    <button id="moveLeft">на 1 метр << </button>
+    <button id="moveRight">на 1 метр >> </button>
+  </div>  
   <script type="module" src="/script.js"></script>
 </body>
 </html>
