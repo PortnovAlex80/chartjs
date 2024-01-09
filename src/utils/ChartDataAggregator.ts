@@ -70,13 +70,13 @@ export default async function ChartDataAggregator(csvpoints: IPoint[], coordinat
     // const cubePolyPoints = fineCubePolynomialApproximationLine.findRandomQualitySegments(weightedGroundLevelMedianFilterPoints);
     const app_cubePolyPoints = fineCubePolynomialApproximationLine.approximate(weightedGroundLevelMedianFilterPoints);
     const finePointsSplite = fineCubePolynomialApproximationLine.fineCubePolynomialApproximation(0.1);
-    sections.push({ label: "Линии Чистой апроксимации", points: finePointsSplite, showLine: true, tension: 0, fill: false, borderColor: 'purple', backgroundColor: 'purple' });
+    // sections.push({ label: "Линии Чистой апроксимации", points: finePointsSplite, showLine: true, tension: 0, fill: false, borderColor: 'purple', backgroundColor: 'purple' });
     console.log(`Fine rmse ${fineCubePolynomialApproximationLine.rmse}`)
 
     // Добавление исходных точек для сравнения
     sections.push({ label: "ТЛО", points: rangedPoints, showLine: false, fill: false, backgroundColor: 'grey' });
 
-    const golaypoints = savitzkyGolayFilter(weightedGroundLevelMedianFilterPoints, 51 , 5);
+    const golaypoints = savitzkyGolayFilter(weightedGroundLevelMedianFilterPoints, 15 , 3);
 
     console.log(JSON.stringify(golaypoints));
     sections.push({

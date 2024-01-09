@@ -88,19 +88,31 @@ function createSavitzkyGolayMatrix(windowSize: number, polynomialDegree: number)
 }
 
 // Функция для вычисления весов фильтра Савицкого-Голея
+// function calculateSavitzkyGolayWeights(windowSize: number, polynomialDegree: number): number[] {
+//     // Создаем матрицу A и вектор B
+//     const { A, B } = createSavitzkyGolayMatrix(windowSize, polynomialDegree);
+
+//     console.log("Матрица A:", A);
+//     console.log("Вектор B:", B);
+
+//     // Решаем систему линейных уравнений Ax=B для получения коэффициентов
+//     const coefficients = solveLinearSystemModified(A, B);
+//     console.log("Коэффициенты (веса):", coefficients);
+//     // Возвращаем коэффициенты в качестве весов
+//     return coefficients;
+// }
+
+// Функция для вычисления весов фильтра Савицкого-Голея
 function calculateSavitzkyGolayWeights(windowSize: number, polynomialDegree: number): number[] {
-    // Создаем матрицу A и вектор B
-    const { A, B } = createSavitzkyGolayMatrix(windowSize, polynomialDegree);
+    // Проверяем, соответствуют ли параметры заданным значениям
+    if (windowSize !== 15 || polynomialDegree !== 3) {
+        throw new Error("Неподдерживаемые параметры фильтра.");
+    }
 
-    console.log("Матрица A:", A);
-    console.log("Вектор B:", B);
-
-    // Решаем систему линейных уравнений Ax=B для получения коэффициентов
-    const coefficients = solveLinearSystemModified(A, B);
-    console.log("Коэффициенты (веса):", coefficients);
-    // Возвращаем коэффициенты в качестве весов
-    return coefficients;
+    // Возвращаем заранее определенные веса для окна в 15 точек и полинома 3 степени
+    return [-78, -13, 42, 87, 122, 147, 162, 167, 162, 147, 122, 87, 42, -13, -78];
 }
+
 
 
 // Функция для решения системы линейных уравнений методом Гаусса
