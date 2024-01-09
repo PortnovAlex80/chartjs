@@ -12,3 +12,4 @@ const orderByXFilter: IFilter = (points: IPoint[]): IPoint[] => {
 };
 
 export default orderByXFilter;
+
