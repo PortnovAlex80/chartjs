@@ -26,6 +26,9 @@ const savitzkyGolayFilter: ISavitzkyGolayFilter = (points, windowSize, polynomia
 
         // Вычислите веса для фильтра Савицкого-Голея
         let weights = calculateSavitzkyGolayWeights(windowSize, polynomialDegree);
+  
+        // let weights = calculateSavitzkyGolayCoefficients(windowSize, polynomialDegree);
+        
 
         // Примените веса к точкам в окне
         let smoothedPoint = applyWeightsToWindow(windowPoints, weights);
@@ -62,6 +65,37 @@ function applyWeightsToWindow(windowPoints: IPoint[], weights: number[]): IPoint
     // Нормализуем результат, чтобы избежать искажения из-за весов
     return { x: sumX / weightSum, y: sumY / weightSum };
 }
+
+
+function calculateSavitzkyGolayCoefficients(n: number, m: number): number[] {
+    if (n % 2 === 0 || n < 1 || m < 0) {
+        throw new Error("Некорректные параметры n и m.");
+    }
+
+    const coefficients: number[][] = [];
+    const mid = Math.floor(n / 2);
+
+    for (let i = -mid; i <= mid; i++) {
+        const row: number[] = [];
+        for (let j = 0; j <= m; j++) {
+            row.push(Math.pow(i, j));
+        }
+        coefficients.push(row);
+    }
+
+    // Решение системы линейных уравнений
+    const A = coefficients;
+    const B = new Array(n).fill(0);
+    B[mid] = 1; // Центральный элемент должен быть 1, чтобы сохранить сумму коэффициентов равной 1
+    console.log(A)
+    console.log(B)
+    
+
+    const weights = solveLinearSystem(A, B);
+    return weights;
+}
+
+
 
 
 
@@ -102,16 +136,16 @@ function createSavitzkyGolayMatrix(windowSize: number, polynomialDegree: number)
 //     return coefficients;
 // }
 
-// Функция для вычисления весов фильтра Савицкого-Голея
-function calculateSavitzkyGolayWeights(windowSize: number, polynomialDegree: number): number[] {
-    // Проверяем, соответствуют ли параметры заданным значениям
-    if (windowSize !== 15 || polynomialDegree !== 3) {
-        throw new Error("Неподдерживаемые параметры фильтра.");
-    }
+// Функция для вычисления весов фильтра Савицкого-Голея version 2
+// function calculateSavitzkyGolayWeights(windowSize: number, polynomialDegree: number): number[] {
+//     // Проверяем, соответствуют ли параметры заданным значениям
+//     if (windowSize !== 15 || polynomialDegree !== 3) {
+//         throw new Error("Неподдерживаемые параметры фильтра.");
+//     }
 
-    // Возвращаем заранее определенные веса для окна в 15 точек и полинома 3 степени
-    return [-78, -13, 42, 87, 122, 147, 162, 167, 162, 147, 122, 87, 42, -13, -78];
-}
+//     // Возвращаем заранее определенные веса для окна в 15 точек и полинома 3 степени
+//     return [-78, -13, 42, 87, 122, 147, 162, 167, 162, 147, 122, 87, 42, -13, -78];
+// }
 
 
 
@@ -218,4 +252,55 @@ function solveLinearSystem(A: number[][], B: number[]): number[] {
     }
     return x;
 }
+
+// Вспомогательные функции
+function transpose(matrix: number[][]): number[][] {
+    return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));
+}
+
+function multiplyMatrices(matrixA: number[][], matrixB: number[][]): number[][] {
+    const result: number[][] = [];
+    for (let i = 0; i < matrixA.length; i++) {
+        result[i] = [];
+        for (let j = 0; j < matrixB[0].length; j++) {
+            let sum = 0;
+            for (let k = 0; k < matrixA[0].length; k++) {
+                sum += matrixA[i][k] * matrixB[k][j];
+            }
+            result[i][j] = sum;
+        }
+    }
+    return result;
+}
+
+function multiplyMatrixAndVector(matrix: number[][], vector: number[]): number[] {
+    return matrix.map(row => row.reduce((sum, value, index) => sum + value * vector[index], 0));
+}
+
+// Основная функция для вычисления весовых коэффициентов version 3
+function calculateSavitzkyGolayWeights(windowSize: number, polynomialDegree: number): number[] {
+    // Генерация матрицы A
+    const A = [];
+    for (let i = -(windowSize - 1) / 2; i <= (windowSize - 1) / 2; i++) {
+        const row = [];
+        for (let j = 0; j <= polynomialDegree; j++) {
+            row.push(i ** j);
+        }
+        A.push(row);
+    }
+
+    // Генерация вектора Y
+    const Y = Array(windowSize).fill(0);
+    Y[(windowSize - 1) / 2] = 1;  // Центральный элемент равен 1
+
+    // Вычисление A^T A и A^T Y
+    const A_transposed = transpose(A);
+    const ATA = multiplyMatrices(A_transposed, A);
+    const ATY = multiplyMatrixAndVector(A_transposed, Y);
+
+    // Решение системы уравнений для нахождения весов
+    const weights = solveLinearSystem(ATA, ATY);
+    return weights;
+}
+
 export default savitzkyGolayFilter;

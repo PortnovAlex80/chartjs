@@ -18,6 +18,8 @@
     "cubic-spline-ts": "^3.0.8",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "mathjs": "^12.2.1",
+    "ml-regression-robust-polynomial": "^3.0.0",
     "typescript": "^5.3.3"
   },
   "devDependencies": {
