@@ -107,8 +107,26 @@ export default function ChartDataAggregator(csvpoints, coordinateA, coordinateB)
             backgroundColor: 'orange',
             borderColor: 'orange'
         });
+        // Применение робастной полиномиальной регрессии для полинома 3-й степени
+        const degree3 = 4; // Степень полинома 3
+        const robustRegression3 = new RobustPolynomialRegression(xdata, ydata, degree3);
+        // Вычисление предсказанных значений регрессии для каждой точки x
+        const regressionPoints3 = xdata.map((x) => ({
+            x,
+            y: robustRegression3.predict(x)
+        }));
+        // Добавление предсказаний регрессии в наборы данных для визуализации
+        sections.push({
+            label: "Робастная полиномиальная регрессия степени 3",
+            points: regressionPoints3,
+            showLine: true,
+            fill: false,
+            backgroundColor: 'purple', // Изменен цвет
+            borderColor: 'purple' // Изменен цвет
+        });
         // Применение аппроксимации методом наименьших квадратов
-        const approximatedPoints = leastSquaresPolynomialApproximation(weightedGroundLevelMedianFilterPoints, 2);
+        // const approximatedPoints = leastSquaresPolynomialApproximation(weightedGroundLevelMedianFilterPoints, 3);
+        const approximatedPoints = leastSquaresPolynomialApproximation(weightedGroundLevelMedianFilterPoints, 3);
         // Вывод точек аппроксимации на график
         sections.push({
             label: "Аппроксимация наименьшими квадратами",
