@@ -1,18 +1,22 @@
+import { all } from 'mathjs';
 import leastSquaresFilter from '../filters/leastSquaresFilter.js';
 import { IPoint } from '../interfaces/IPoint';
+import { RobustPolynomialRegression } from 'ml-regression-robust-polynomial';
+import orderByXFilter from '../filters/orderByXFilter.js';
 
 export class CubicPolynomialApproximation {
     private coefficients: number[];
     private points: IPoint[];
-    private approximatedPoints: IPoint[];
+    private approximatedPolynomialPoints: IPoint[];
     private errorThreshold = 0.40; // Threshold for rude error 
     private approximaredLeastSWPoints: IPoint[];
     public rmse: number;
+    private attempts: number = 3;
 
     constructor() {
         this.coefficients = []; // коэф полинома
         this.points = []; // входной набор данных
-        this.approximatedPoints = []; // набор упорядоченных точек полинома
+        this.approximatedPolynomialPoints = []; // набор упорядоченных точек полинома
         this.approximaredLeastSWPoints = [];
         this.rmse = 1000;
     }
@@ -28,7 +32,7 @@ export class CubicPolynomialApproximation {
 
         this.performApproximation();       
 
-    return this.approximatedPoints;
+    return this.approximatedPolynomialPoints;
     }
 
     findQualitySegments(inputPoints: IPoint[]): IPoint[] {
@@ -149,8 +153,7 @@ export class CubicPolynomialApproximation {
         return combinedSegments;
     
     }
-    
-    
+        
     logger(): void {
         this.approximaredLeastSWPoints = this.generatePointsOnLeastSquaresLine();
     
@@ -167,27 +170,27 @@ export class CubicPolynomialApproximation {
     
     calculateRMSE(): number {
         let sumOfSquares = this.points.reduce((sum, point, index) => {
-            let approxPoint = this.approximatedPoints[index];
+            let approxPoint = this.approximatedPolynomialPoints[index];
             let diff = point.y - approxPoint.y;
             return sum + diff * diff;
         }, 0);
         return Math.sqrt(sumOfSquares / this.points.length);
     }
 
-        calculateAbsDiffRmse(): number {
+    calculateAbsDiffRmse(): number {
         // Ensure that both sets of points are available
-        if (!this.approximatedPoints || !this.approximaredLeastSWPoints) {
+        if (!this.approximatedPolynomialPoints || !this.approximaredLeastSWPoints) {
             throw new Error("Необходимо сначала сгенерировать оба набора точек.");
         }
 
         // Calculate the square of the differences
-        const sumOfSquares = this.approximatedPoints.reduce((sum, point, index) => {
+        const sumOfSquares = this.approximatedPolynomialPoints.reduce((sum, point, index) => {
             const diff = point.y - this.approximaredLeastSWPoints[index].y;
             return sum + diff * diff;
         }, 0);
 
         // Calculate the RMSE
-        return Math.sqrt(sumOfSquares / this.approximatedPoints.length);
+        return Math.sqrt(sumOfSquares / this.approximatedPolynomialPoints.length);
     }
 
     calculateAbsDiff(): number[] {
@@ -195,7 +198,7 @@ export class CubicPolynomialApproximation {
         const leastSquaresLine = this.approximaredLeastSWPoints;
 
         // Then, calculate the Y values on the cubic polynomial for each X value
-        const polynomialYs = this.approximatedPoints.map(point => 
+        const polynomialYs = this.approximatedPolynomialPoints.map(point => 
             this.coefficients.reduce((sum, coeff, index) => sum + coeff * Math.pow(point.x, index), 0)
         );
 
@@ -238,7 +241,7 @@ export class CubicPolynomialApproximation {
         const calculateY = (x: number) => startPoint.y + slope * (x - startPoint.x);
 
         // Generate points on the line using the x values from approximatedPoints
-        const linePoints = this.approximatedPoints.map(point => ({
+        const linePoints = this.approximatedPolynomialPoints.map(point => ({
             x: point.x,
             y: calculateY(point.x)
         }));
@@ -261,7 +264,7 @@ export class CubicPolynomialApproximation {
 
         this.coefficients = this.solveLinearSystem(A, B);
 
-        this.approximatedPoints = x.map(xi => ({
+        this.approximatedPolynomialPoints = x.map(xi => ({
             x: xi,
             y: this.coefficients.reduce((sum, coeff, index) => sum + coeff * Math.pow(xi, index), 0)
         }))
@@ -319,10 +322,9 @@ export class CubicPolynomialApproximation {
     } 
 
     getY(x: number): number {
-        return this.coefficients.reduce((sum, coeff, index) => sum + coeff * Math.pow(x, index), 0);
-      }
+        return this.coefficients.reduce((sum, coeff, index) => sum + coeff * Math.pow(x, index), 0);}
      
-      fineCubePolynomialApproximation(step: number): IPoint[] {
+    fineCubePolynomialApproximation(step: number): IPoint[] {
         if (this.coefficients.length === 0 || this.points.length === 0) {
             throw new Error("Коэффициенты полинома или набор точек не определены.");
         }
@@ -451,23 +453,22 @@ export class CubicPolynomialApproximation {
                 index === self.findIndex(p => p.x === point.x && p.y === point.y))
             .sort((a, b) => a.x - b.x);
     }
-
-    
-        findRandomQualitySegments(inputPoints: IPoint[]): IPoint[] {
+ 
+    findRandomQualitySegments(inputPoints: IPoint[]): IPoint[] {
         if (inputPoints.length === 0) {
             throw new Error("Массив точек не должен быть пустым.");
         }
+
     
         let pointsCopy = [...inputPoints];
         this.removeDuplicatesAndSort();
     
-        const threshold_rmse = 0.2;
-        const threshold_diffRMSE = 0.015;
+        const threshold_rmse = 0.065; // 0.2
+        const threshold_diffRMSE = 0.010; // 0.015
         let remainingPoints = new Set(pointsCopy); // Используем Set для легкого исключения уже обработанных точек
     
         let bestSegments: IPoint[][] = [];
     
-        console.log("START...")
         let whilecnt = 100;
         while (remainingPoints.size > 0) {
             
@@ -479,8 +480,7 @@ export class CubicPolynomialApproximation {
             // Выбираем случайную начальную точку из оставшихся
             let startIdx = Math.floor(Math.random() * remainingPoints.size);
             let startPoint = Array.from(remainingPoints)[startIdx];
-            console.log(`Start random point  ${JSON.stringify(startPoint)}`);
-    
+            
             // Определяем индексы для исходного массива
             let start = pointsCopy.indexOf(startPoint);
             let end = start;
@@ -491,43 +491,68 @@ export class CubicPolynomialApproximation {
     
             // Расширяем сегмент влево и вправо, пока это возможно
             let innerwhilecnt = 100;
+            let expandDirection: boolean = true; // true для расширения влево, false для расширения вправо
+
             while (isGrowingLeft || isGrowingRight) {
                 
                 if (innerwhilecnt <0 ) {
-                    console.log(`выход из внутреннего цикла`);
                     break};
                 innerwhilecnt--;
     
-                if (isGrowingLeft && start > 0) {
-                    start--;
-                } else {
-                    isGrowingLeft = false;
+                if (expandDirection && isGrowingLeft) {
+                    if (start > 0) {
+                        start--;
+                    } else {
+                        // Если достигли левого края, переключаем направление
+                        isGrowingLeft = false;
+                        expandDirection = false;
+                    }
                 }
-    
-                if (isGrowingRight && end < pointsCopy.length - 1) {
-                    end++;
-                } else {
-                    isGrowingRight = false;
+            
+                if (!expandDirection && isGrowingRight) {
+                    if (end < pointsCopy.length - 1) {
+                        end++;
+                    } else {
+                        // Если достигли правого края, переключаем направление
+                        isGrowingRight = false;
+                        expandDirection = true;
+                    }
                 }
+            
+                // Переключаем направление расширения на следующем шаге, если оба направления еще возможны
+                if (isGrowingLeft || isGrowingRight) {
+                    expandDirection = !expandDirection;
+                }
+            
     
                 let segment = pointsCopy.slice(start, end + 1);
                 this.approximate(segment);
                 this.approximaredLeastSWPoints = this.generatePointsOnLeastSquaresLine();
+
                 const polynomialRMSE = this.rmse;
                 const lineRMSE = this.calculateRMSELeastSquaresWeighted();
                 const diffRMSE = this.calculateAbsDiffRmse();
-    
+
+                // Применение робастной полиномиальной регрессии - попробовал, сработало хуже, поэтому удалил этот код.     
+                // попробую дистанцию добавить
+
+                let thresholdDistance = false;
+                if (Math.abs(this.approximaredLeastSWPoints[this.approximaredLeastSWPoints.length - 1].y - segment[segment.length-1].y) < 0.05) {
+                    thresholdDistance = true;
+                };
+;
                 let threshold_diffRMSE_current = lineRMSE < (threshold_rmse / 2) ? threshold_diffRMSE * 1.5 : threshold_diffRMSE;
-    
-                if (polynomialRMSE < threshold_rmse && lineRMSE < threshold_rmse && diffRMSE < threshold_diffRMSE_current) {
-                    console.log(`Segment добавлен`)
+                
+                if (polynomialRMSE < threshold_rmse && lineRMSE < threshold_rmse && diffRMSE < threshold_diffRMSE_current && thresholdDistance) {
                     lastValidSegment = segment;
-                    isGrowingLeft = true;
-                    isGrowingRight = true;
+                    isGrowingLeft = expandDirection;
+                    isGrowingRight = !expandDirection;
                 } else {
                     // Уменьшаем сегмент обратно, так как последнее расширение было неудачным
-                    if (isGrowingLeft) start++;
-                    if (isGrowingRight) end--;
+                    if (expandDirection) start++;
+                    if (!expandDirection) end--;
+                    isGrowingLeft = false;
+                    isGrowingRight = false;
                     break;
                 }
             }
@@ -560,8 +585,174 @@ export class CubicPolynomialApproximation {
     
         // Сортируем итоговые точки по координате X
         combinedSegments.sort((a, b) => a.x - b.x);
-        
+
+            // Проверяем, достигнут ли желаемый результат
+    if (combinedSegments.length === 0 && this.attempts > 0) {
+        // Если результат пуст и есть еще попытки, вызываем функцию снова
+        this.attempts--;
+        return this.findRandomQualitySegments(inputPoints);
+    } else {
+        // Возвращаем результат, если он не пуст или закончились попытки
         return combinedSegments;
     }
+    }
+
+    correctionSegments(allRangePoints: IPoint[]): IPoint[] {
+        let sum_length = 0;
+        const window: number = 6;
+        const pointsOnAllRange = allRangePoints.length;
+        if (pointsOnAllRange < 2) {
+            throw new Error("correctionSegments: Мало точек для работы алгоритма")
+        } else {
+            console.log(`correctionSegments: Получено точек на участке для расчета ${pointsOnAllRange}`)
+        };;
+
+        const MIN_RANGE_LENGHT = 3;
+        // архив будет сдержать все границы расчитанных из вариантов;
+        
+        const startRangeX = 0;
+        const endRangeX = pointsOnAllRange - 1;
+        console.log(`Длина участка ${startRangeX} - ${endRangeX}`);
+
+
+        const lengthByIndex = (start: number, end: number): number => allRangePoints[end].x - allRangePoints[start].x;
+        const lengthRange = lengthByIndex(startRangeX,endRangeX);
+        console.log(`Длина участка ${lengthRange}`);
+
+        if (lengthRange < MIN_RANGE_LENGHT) {
+            throw new Error("correctionSegments: Внимание. Короткий участок")
+        } else {
+            console.log(`Длина участка ${lengthRange}`)
+        };
+       
+        // Инициируем агрегатор результатов расчетов границ сегментов для цикла перебора. 
+        let segmentsNodes: IPoint[][] =  [];
+        
+        const windowMAX: number = lengthRange;
+        
+        // Первый проход - запускаем расчет findRandomQualitySegments(allRangePoints) на весь участок
+        segmentsNodes[0] = this.findRandomQualitySegments(allRangePoints);
+        console.log(`Нулевой проход завершен - набор узлов: ${JSON.stringify(segmentsNodes[0])}`);
+
+        const processSegment = (startIndex: number) => {
+            if (startIndex >= pointsOnAllRange - 1) {
+                return; // Условие выхода из рекурсии
+            }
+        
+            let end = startIndex;
+            let lenSegment = 0;
+        
+            while (lenSegment < window && end < pointsOnAllRange - 1) {
+                end++;
+                lenSegment = lengthByIndex(startIndex, end);
+            }
+        
+            if (lenSegment >= MIN_RANGE_LENGHT || startIndex === 0) {
+                const segment = allRangePoints.slice(startIndex, end);
+                const segmentNodes = this.findRandomQualitySegments(segment);
+                segmentsNodes.push(segmentNodes);
+            }
+        
+            processSegment(end); // Рекурсивный вызов для следующего сегмента
+        };
+        
+        let i = 0;
+        while (i < pointsOnAllRange - 1 ) {
+            processSegment(i); // Начальный вызов рекурсивной функции
+            let end = i;
+            let lenSegment = 0;
+        
+            while (lenSegment < (window / 2) && end < pointsOnAllRange - 1) {
+                end++;
+                lenSegment = lengthByIndex(i, end);
+            };
+            i = end;
+            };
+        
+        console.log(`Проходы завершены. Кол-во наборов узлов ${segmentsNodes.length}`);
+
+        // Сначала преобразуем двумерный массив сегментов в одномерный
+        const flatSegments = segmentsNodes
+        .flat()
+        .sort((a, b) => a.x - b.x);
+
+        // Используем объект для подсчета количества каждой точки
+        const pointCounts = flatSegments.reduce((acc: {[key: string]: number}, point) => {
+            // Ключ основан на координатах точки
+            const key = `x:${point.x}, y:${point.y}`;
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+        }, {} as {[key: string]: number}); // Явное указание типа для начального значения
+
+        // Выводим количество повторений для каждой точки
+        console.log("Подсчет количества повторений для каждой точки:");
+        Object.entries(pointCounts).forEach(([key, count]) => {
+            console.log(`${key} - количество повторов: ${count}`);
+        });
+
+        // Находим максимальное и минимальное количество повторений
+        const counts = Object.values(pointCounts);
+        const maxRepetitions = Math.max(...counts);
+        const minRepetitions = Math.min(...counts);
+
+        // Определяем порог как долю от интервала между максимальным и минимальным значениями
+        const thresholdFraction = 1/10; // Например, верхние 5/6 значений
+        const threshold = minRepetitions + (maxRepetitions - minRepetitions) * thresholdFraction;
+
+        // Фильтрация точек
+        const filteredSegments = flatSegments.filter(point => {
+            const key = `x:${point.x}, y:${point.y}`;
+            return pointCounts[key] >= threshold;
+        });
+
+
+        // Удаление дубликатов точек
+    const uniqueSegmentsSet = new Set(filteredSegments.map(point => `x:${point.x}, y:${point.y}`));
+    const uniqueSegments = Array.from(uniqueSegmentsSet).map(str => {
+        const [x, y] = str.split(', ').map(s => parseFloat(s.split(':')[1]));
+        return { x, y };
+    });
+
+        //
+        return (uniqueSegments.flat());
+    }
+
+    calculateAbsDiffRMSEdiffRobustPolymialRMSE(regressionPoints: IPoint[]) {
+        // Ensure that both sets of points are available
+        if (!this.approximatedPolynomialPoints || !regressionPoints) {
+            throw new Error("Необходимо сначала сгенерировать оба набора точек.");
+        }
+
+        // Calculate the square of the differences
+        const sumOfSquares = this.approximatedPolynomialPoints.reduce((sum, point, index) => {
+            const diff = point.y - regressionPoints[index].y;
+            return sum + diff * diff;
+        }, 0);
+
+        // Calculate the RMSE
+        return Math.sqrt(sumOfSquares / this.approximatedPolynomialPoints.length);
+    }
+
+    calculateRMSErobustPolynomialRegressionRMSE(regressionPoints: IPoint[]) {
+        let sumOfSquares = this.points.reduce((sum, point, index) => {
+            let approxPoint = regressionPoints[index];
+            let diff = point.y - approxPoint.y;
+            return sum + diff * diff;
+        }, 0);
+        return Math.sqrt(sumOfSquares / this.points.length);
+    }
+
+    // perpendicularDistance(pointA: IPoint, pointB: IPoint, pointC: IPoint): number {
+    //     let area = Math.abs(0.5 * (pointA.x * (pointB.y - pointC.y) + pointB.x * (pointC.y - pointA.y) + pointC.x * (pointA.y - pointB.y)));
+    //     let bottom = Math.hypot(pointA.x - pointB.x, pointA.y - pointB.y);
+    //     return (area / bottom) * 2;
+    // }
+
+    perpendicularDistance(pointA: IPoint, pointB: IPoint, pointC: IPoint): number {
+        let area = Math.abs(0.5 * (pointA.x * (pointB.y - pointC.y) + pointB.x * (pointC.y - pointA.y) + pointC.x * (pointA.y - pointB.y)));
+        let bottom = Math.hypot(pointA.x - pointB.x, pointA.y - pointB.y);
+        return 2 * area / bottom;
+    }
+    
 
 }

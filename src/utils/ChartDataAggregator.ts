@@ -17,6 +17,8 @@ import approximateWithPolynomials from '../filters/approximateWithPolynomials.js
 import { UnivariateCubicSmoothingSpline, DoubleArray } from '../filters/smoothingspline.js';
 import { RobustPolynomialRegression } from 'ml-regression-robust-polynomial';
 import leastSquareSolver from '../filters/LeastSquareSolver.js';
+import splitAndMergeFilter from '../filters/splitAndMergeFilter.js';
+import { vertexOptimizer } from '../filters/VertexOptimizer.js';
 
 
 
@@ -43,7 +45,7 @@ export default async function ChartDataAggregator(csvpoints: IPoint[], coordinat
     // Работающий набор
     // Применение взвешенного медианного фильтра по уровню земли
     const weightedGroundLevelMedianFilterPoints = weightedGroundLevelMedianFilter(rangedPoints);
-    sections.push({ label: "Весовой фильтр по уровню земли", points: weightedGroundLevelMedianFilterPoints, showLine: false, fill: false, backgroundColor: 'red' });
+    
 
     // Применение улучшенного сегментного аппроксиматора к отфильтрованным данным
     // sections.push({ label: "Алгоритм Enhanced-18", points: enhancedSegmentApproximation(weightedGroundLevelMedianFilterPoints, 0.20), showLine: true, tension: 0, fill: false, borderColor: 'green', backgroundColor: 'green' });
@@ -72,32 +74,43 @@ export default async function ChartDataAggregator(csvpoints: IPoint[], coordinat
     // });
     
     const fineCubePolynomialApproximationLine = new CubicPolynomialApproximation();
-    // const cubePolyPoints = fineCubePolynomialApproximationLine.findRandomQualitySegments(weightedGroundLevelMedianFilterPoints);
-    const app_cubePolyPoints = fineCubePolynomialApproximationLine.approximate(weightedGroundLevelMedianFilterPoints);
-    const finePointsSplite = fineCubePolynomialApproximationLine.fineCubePolynomialApproximation(0.1);
-    // sections.push({ label: "Линии Чистой апроксимации", points: finePointsSplite, showLine: true, tension: 0, fill: false, borderColor: 'purple', backgroundColor: 'purple' });
-    console.log(`Fine rmse ${fineCubePolynomialApproximationLine.rmse}`)
+    const cubePolyPoints = fineCubePolynomialApproximationLine.findRandomQualitySegments(weightedGroundLevelMedianFilterPoints);
+    // const correctionSegments = fineCubePolynomialApproximationLine.correctionSegments(weightedGroundLevelMedianFilterPoints);
+    const splitAndMergeFilterPoints = splitAndMergeFilter(weightedGroundLevelMedianFilterPoints,0.15);
+    // console.log(cubePolyPoints);
+    //
 
-    // Добавление исходных точек для сравнения
-    sections.push({ label: "ТЛО", points: rangedPoints, showLine: false, fill: false, backgroundColor: 'grey' });
-
-    // const golaypoints = savitzkyGolayFilter(weightedGroundLevelMedianFilterPoints, 35 , 3);
-
-    // console.log(JSON.stringify(golaypoints));
     // sections.push({
-    //     label: "Савицкий-Голай",
-    //     points: golaypoints,
+    //     label: "findRQS-Portnov",
+    //     points: cubePolyPoints,
+    //     tension: 0,
+    //     showLine: true,
+    //     fill: false,
+    //     backgroundColor: 'green',
+    //     borderColor: 'green', // Цвет линии
+    //     borderDash: [5, 5] // Стиль пунктирной линии: чередование 5 пикселей линии и 5 пикселей пропуска
+    // });
+
+    // sections.push({
+    //     label: "splitAndMergeFilterPoints-Portnov",
+    //     points: splitAndMergeFilterPoints,
+    //     tension: 0,
     //     showLine: true,
     //     fill: false,
     //     backgroundColor: 'blue',
     //     borderColor: 'blue', // Цвет линии
-    //     borderDash: [5, 5] // Стиль пунктирной линии: чередование 5 пикселей линии и 5 пикселей пропуска
+        
     // });
 
-    // const new_appr = approximateWithPolynomials(weightedGroundLevelMedianFilterPoints);
+    // const app_cubePolyPoints = fineCubePolynomialApproximationLine.approximate(weightedGroundLevelMedianFilterPoints);
+    // const finePointsSplite = fineCubePolynomialApproximationLine.fineCubePolynomialApproximation(0.1);
+    // sections.push({ label: "Линии Чистой апроксимации", points: finePointsSplite, showLine: true, tension: 0, fill: false, borderColor: 'purple', backgroundColor: 'purple' });
+    // console.log(`Fine rmse ${fineCubePolynomialApproximationLine.rmse}`)
+
+    // const new_appr = leastSquaresPolynomialApproximation(weightedGroundLevelMedianFilterPoints);
     // console.log(new_appr);
     //     sections.push({
-    //     label: "...bizon",
+    //     label: "Апроксимация полиномом",
     //     points: new_appr,
     //     showLine: true,
     //     fill: false,
@@ -107,67 +120,83 @@ export default async function ChartDataAggregator(csvpoints: IPoint[], coordinat
     // });
 
 
-    const ydata: DoubleArray = weightedGroundLevelMedianFilterPoints.map((point) => point.y);
-    const xdata: DoubleArray = weightedGroundLevelMedianFilterPoints.map((point) => point.x);    
+    // const ydata: DoubleArray = weightedGroundLevelMedianFilterPoints.map((point) => point.y);
+    // const xdata: DoubleArray = weightedGroundLevelMedianFilterPoints.map((point) => point.x);    
     // const spline = new UnivariateCubicSmoothingSpline(xdata, ydata);
     // const yidata = spline.evaluate(xdata);
     // const xidata = xdata;
     // const splineCoords: IPoint[] = xdata.map((x, index) => ({ x, y: yidata[index] }));
 
-        // Применение робастной полиномиальной регрессии
-        const degree = 2; // Например, степень полинома 3
-        const robustRegression = new RobustPolynomialRegression(xdata, ydata, degree);
+        // // Применение робастной полиномиальной регрессии
+        // const degree = 2; // Например, степень полинома 3
+        // const robustRegression = new RobustPolynomialRegression(xdata, ydata, degree);
         
         // Вычисление предсказанных значений регрессии для каждой точки x
-        const regressionPoints: IPoint[] = xdata.map((x) => ({
-            x,
-            y: robustRegression.predict(x)
-        }));
+        // const regressionPoints: IPoint[] = xdata.map((x) => ({
+        //     x,
+        //     y: robustRegression.predict(x)
+        // }));
     
         // Добавление предсказаний регрессии в наборы данных для визуализации
-        sections.push({
-            label: "Робастная полиномиальная регрессия",
-            points: regressionPoints,
-            showLine: true,
-            fill: false,
-            backgroundColor: 'orange',
-            borderColor: 'orange'
-        });
-
-        // Применение робастной полиномиальной регрессии для полинома 3-й степени
-        const degree3 = 4; // Степень полинома 3
-        const robustRegression3 = new RobustPolynomialRegression(xdata, ydata, degree3);
-
-        // Вычисление предсказанных значений регрессии для каждой точки x
-        const regressionPoints3: IPoint[] = xdata.map((x) => ({
-            x,
-            y: robustRegression3.predict(x)
-        }));
-
-        // Добавление предсказаний регрессии в наборы данных для визуализации
-        sections.push({
-            label: "Робастная полиномиальная регрессия степени 3",
-            points: regressionPoints3,
-            showLine: true,
-            fill: false,
-            backgroundColor: 'purple', // Изменен цвет
-            borderColor: 'purple' // Изменен цвет
-        });
+        // sections.push({
+        //     label: "Робастная полиномиальная регрессия",
+        //     points: regressionPoints,
+        //     showLine: true,
+        //     fill: false,
+        //     backgroundColor: 'orange',
+        //     borderColor: 'orange'
+        // });
 
         // Применение аппроксимации методом наименьших квадратов
         // const approximatedPoints = leastSquaresPolynomialApproximation(weightedGroundLevelMedianFilterPoints, 3);
-        const approximatedPoints = leastSquaresPolynomialApproximation(weightedGroundLevelMedianFilterPoints, 3);
+        // const approximatedPoints = leastSquaresPolynomialApproximation(weightedGroundLevelMedianFilterPoints, 3);
 
         // Вывод точек аппроксимации на график
-        sections.push({
-            label: "Аппроксимация наименьшими квадратами",
-            points: approximatedPoints,
-            showLine: true,
-            fill: false,
-            backgroundColor: 'blue',
-            borderColor: 'blue', // Цвет линии
-            borderDash: [5, 5] // Стиль пунктирной линии: чередование 5 пикселей линии и 5 пикселей пропуска
-        });
+        // sections.push({
+        //     label: "Аппроксимация наименьшими квадратами",
+        //     points: approximatedPoints,
+        //     showLine: true,
+        //     fill: false,
+        //     backgroundColor: 'blue',
+        //     borderColor: 'blue', // Цвет линии
+        //     borderDash: [5, 5] // Стиль пунктирной линии: чередование 5 пикселей линии и 5 пикселей пропуска
+        // });
+
+        // const approximatedPoints = enhancedSegmentApproximation(weightedGroundLevelMedianFilterPoints, 0.10);
+
+        // // Вывод точек аппроксимации на график
+        // sections.push({
+        //     label: "Enhanced 18 Portnov",
+        //     points: approximatedPoints,
+        //     showLine: true,
+        //     tension: 0,
+        //     fill: false,
+        //     backgroundColor: 'blue',
+        //     borderColor: 'blue', // Цвет линии
+        //     borderDash: [5, 5] // Стиль пунктирной линии: чередование 5 пикселей линии и 5 пикселей пропуска
+        // });
+
+
+        // const approximatedPoints = vertexOptimizer(weightedGroundLevelMedianFilterPoints);
+
+        // // Вывод точек аппроксимации на график
+        // sections.push({
+        //     label: "Enhanced 18 Portnov",
+        //     points: approximatedPoints,
+        //     showLine: true,
+        //     tension: 0,
+        //     fill: false,
+        //     backgroundColor: 'blue',
+        //     borderColor: 'blue', // Цвет линии
+        //     borderDash: [5, 5] // Стиль пунктирной линии: чередование 5 пикселей линии и 5 пикселей пропуска
+        // });
+
+    // Добавление исходных точек для сравнения
+    sections.push({ label: "Весовой фильтр по уровню земли", points: weightedGroundLevelMedianFilterPoints, showLine: false, fill: false, backgroundColor: 'red' });
+
+    sections.push({ label: "ТЛО", points: rangedPoints, showLine: false, fill: false, backgroundColor: 'grey' });
+
+
 
     // Формирование метки для каждого набора данных
     const labeledDataSets = sections.map(section => {

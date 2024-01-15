@@ -15,10 +15,10 @@ import { IFilter } from '../interfaces/IFilter';
  */
 const weightedGroundLevelMedianFilter: IFilter = (points: IPoint[], maxWindowSize: number = 10, maxLength: number = 0.2): IPoint[] => {
     const filteredPoints: IPoint[] = [];
-
+    const threshold = 0.20; 
     let i = 0;
     while (i < points.length) {
-        let windowSize = 1;
+        let windowSize = 10;
         while (windowSize < Math.min(maxWindowSize, points.length - i) && 
             Math.abs(points[i + windowSize].x - points[i].x) <= maxLength) {
             windowSize++;
@@ -26,7 +26,7 @@ const weightedGroundLevelMedianFilter: IFilter = (points: IPoint[], maxWindowSiz
 
         const windowPoints = points.slice(i, i + windowSize);
         const basePoint = windowPoints.reduce((lowest, point) => point.y < lowest.y ? point : lowest, windowPoints[0]);
-        const weightedPoints = windowPoints.filter(point => Math.abs(point.y - basePoint.y) <= 0.2);
+        const weightedPoints = windowPoints.filter(point => Math.abs(point.y - basePoint.y) <= threshold);
 
         const weightedMedianX = getWeightedMedian(weightedPoints.map(p => p.x), basePoint, weightedPoints);
         const weightedMedianY = getWeightedMedian(weightedPoints.map(p => p.y), basePoint, weightedPoints);
