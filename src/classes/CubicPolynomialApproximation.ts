@@ -248,6 +248,27 @@ export class CubicPolynomialApproximation {
 
         return linePoints;
     }
+
+    private generateApproximatedPointsBetweenTwoPointsOnLine(start: IPoint, end: IPoint): IPoint[] {
+
+        // Calculate the slope of the line
+           const slope = (end.y - start.y) / (end.x - start.x);
+
+        // Function to calculate y for a given x on the line
+        const calculateY = (x: number) => start.y + slope * (x - start.x);
+
+        // Generate points on the line using the x values from approximatedPoints
+        let linePoints: IPoint[] = [];
+        
+        for (let i=start.x ; i < end.x; i+=0.1) {
+            linePoints.push({
+                x: i,
+                y: calculateY(i)
+            });
+        }
+
+        return linePoints;
+    }
    
     private performApproximation(): void {
         let x = this.points.map(p => p.x);
@@ -463,8 +484,8 @@ export class CubicPolynomialApproximation {
         let pointsCopy = [...inputPoints];
         this.removeDuplicatesAndSort();
     
-        const threshold_rmse = 0.065; // 0.2
-        const threshold_diffRMSE = 0.010; // 0.015
+        const threshold_rmse = 0.08; // 0.2
+        const threshold_diffRMSE = 0.015; // 0.015
         let remainingPoints = new Set(pointsCopy); // Используем Set для легкого исключения уже обработанных точек
     
         let bestSegments: IPoint[][] = [];
@@ -573,18 +594,13 @@ export class CubicPolynomialApproximation {
         let combinedSegments: IPoint[] = [];
         bestSegments.forEach((segment, index) => {
             if (segment.length > 0) {
-                // Добавляем первую точку сегмента
                 combinedSegments.push(segment[0]);
-    
-                // Если это последний сегмент, добавляем также и последнюю точку
-                if (index === bestSegments.length - 1) {
-                    combinedSegments.push(segment[segment.length - 1]);
-                }
+                combinedSegments.push(segment[segment.length - 1]);
             }
         });
     
         // Сортируем итоговые точки по координате X
-        combinedSegments.sort((a, b) => a.x - b.x);
+        combinedSegments.sort((a, b) => a.x - b.x); /// надо ли ?
 
             // Проверяем, достигнут ли желаемый результат
     if (combinedSegments.length === 0 && this.attempts > 0) {
@@ -593,6 +609,7 @@ export class CubicPolynomialApproximation {
         return this.findRandomQualitySegments(inputPoints);
     } else {
         // Возвращаем результат, если он не пуст или закончились попытки
+        
         return combinedSegments;
     }
     }

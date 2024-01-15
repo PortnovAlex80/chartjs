@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import visualDatasetBuilder from './VisualDatasetBuilder.js';
 import orderByXFilter from '../filters/orderByXFilter.js';
 import filterXRange from '../filters/filterXRange.js';
-import weightedGroundLevelMedianFilter from '../filters/weightedGroundLevelMedianFilter.js';
+import weightedGroundLevelMedianFilter, { triangleBaseDistanceFilter } from '../filters/weightedGroundLevelMedianFilter.js';
 import { CubicPolynomialApproximation } from '../classes/CubicPolynomialApproximation.js';
 import splitAndMergeFilter from '../filters/splitAndMergeFilter.js';
 /**
@@ -58,16 +58,16 @@ export default function ChartDataAggregator(csvpoints, coordinateA, coordinateB)
         const splitAndMergeFilterPoints = splitAndMergeFilter(weightedGroundLevelMedianFilterPoints, 0.15);
         // console.log(cubePolyPoints);
         //
-        // sections.push({
-        //     label: "findRQS-Portnov",
-        //     points: cubePolyPoints,
-        //     tension: 0,
-        //     showLine: true,
-        //     fill: false,
-        //     backgroundColor: 'green',
-        //     borderColor: 'green', // Цвет линии
-        //     borderDash: [5, 5] // Стиль пунктирной линии: чередование 5 пикселей линии и 5 пикселей пропуска
-        // });
+        sections.push({
+            label: "findRQS-Portnov",
+            points: cubePolyPoints,
+            tension: 0,
+            showLine: true,
+            fill: false,
+            backgroundColor: 'green',
+            borderColor: 'green', // Цвет линии
+            borderDash: [5, 5] // Стиль пунктирной линии: чередование 5 пикселей линии и 5 пикселей пропуска
+        });
         // sections.push({
         //     label: "splitAndMergeFilterPoints-Portnov",
         //     points: splitAndMergeFilterPoints,
@@ -141,9 +141,11 @@ export default function ChartDataAggregator(csvpoints, coordinateA, coordinateB)
         //     borderDash: [5, 5] // Стиль пунктирной линии: чередование 5 пикселей линии и 5 пикселей пропуска
         // });
         // const approximatedPoints = vertexOptimizer(weightedGroundLevelMedianFilterPoints);
-        // // Вывод точек аппроксимации на график
+        // const approximatedPoints = weightedGroundLevelMedianFilterWindowForRailTen(rangedPoints);
+        const approximatedPoints = triangleBaseDistanceFilter(weightedGroundLevelMedianFilterPoints);
+        // Вывод точек аппроксимации на график
         // sections.push({
-        //     label: "Enhanced 18 Portnov",
+        //     label: "Ranged Enhanced vertexOptimizer 18 Portnov",
         //     points: approximatedPoints,
         //     showLine: true,
         //     tension: 0,
@@ -153,8 +155,9 @@ export default function ChartDataAggregator(csvpoints, coordinateA, coordinateB)
         //     borderDash: [5, 5] // Стиль пунктирной линии: чередование 5 пикселей линии и 5 пикселей пропуска
         // });
         // Добавление исходных точек для сравнения
-        sections.push({ label: "Весовой фильтр по уровню земли", points: weightedGroundLevelMedianFilterPoints, showLine: false, fill: false, backgroundColor: 'red' });
+        // sections.push({ label: "Весовой фильтр по уровню земли", points: weightedGroundLevelMedianFilterPoints, showLine: false, fill: false, backgroundColor: 'red' });
         sections.push({ label: "ТЛО", points: rangedPoints, showLine: false, fill: false, backgroundColor: 'grey' });
+        // 
         // Формирование метки для каждого набора данных
         const labeledDataSets = sections.map(section => {
             return Object.assign(Object.assign({ data: section.points }, section), { label: `${section.label} - ${section.points.length}` });
