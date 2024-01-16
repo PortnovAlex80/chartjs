@@ -10,9 +10,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import visualDatasetBuilder from './VisualDatasetBuilder.js';
 import orderByXFilter from '../filters/orderByXFilter.js';
 import filterXRange from '../filters/filterXRange.js';
-import weightedGroundLevelMedianFilter, { triangleBaseDistanceFilter } from '../filters/weightedGroundLevelMedianFilter.js';
+import weightedGroundLevelMedianFilter from '../filters/weightedGroundLevelMedianFilter.js';
 import { CubicPolynomialApproximation } from '../classes/CubicPolynomialApproximation.js';
 import splitAndMergeFilter from '../filters/splitAndMergeFilter.js';
+import { bestCombinationFilter } from '../filters/vertexMinimazer.js';
 /**
  * Модуль ChartDataAggregator агрегирует и обрабатывает данные для визуализации графиков.
  * Он принимает необработанные точки из CSV-файла и координаты для фильтрации данных,
@@ -44,16 +45,17 @@ export default function ChartDataAggregator(csvpoints, coordinateA, coordinateB)
         // const leastPoints = leastSquares.approximatePoints();
         // console.log(`Least rmse ${leastSquares.rmse}`)
         // sections.push({
-        //     label: "leastPoints",
-        //     points: leastPoints,
+        //     label: "leastPoints",w
+        //     points: leastPoints,ee
         //     showLine: true,
         //     fill: false,
-        //     backgroundColor: 'blue',
+        //     backgroundColor: 'blue',weq
         //     borderColor: 'blue', // Цвет линии
         //     borderDash: [5, 5] // Стиль пунктирной линии: чередование 5 пикселей линии и 5 пикселей пропуска
         // });
         const fineCubePolynomialApproximationLine = new CubicPolynomialApproximation();
-        const cubePolyPoints = fineCubePolynomialApproximationLine.findRandomQualitySegments(weightedGroundLevelMedianFilterPoints);
+        let cubePolyPoints = fineCubePolynomialApproximationLine.findRandomQualitySegments(weightedGroundLevelMedianFilterPoints);
+        // cubePolyPoiewnts = bestCombinationFilter(cubePolyPoints);
         // const correctionSegments = fineCubePolynomialApproximationLine.correctionSegments(weightedGroundLevelMedianFilterPoints);
         const splitAndMergeFilterPoints = splitAndMergeFilter(weightedGroundLevelMedianFilterPoints, 0.15);
         // console.log(cubePolyPoints);
@@ -142,18 +144,18 @@ export default function ChartDataAggregator(csvpoints, coordinateA, coordinateB)
         // });
         // const approximatedPoints = vertexOptimizer(weightedGroundLevelMedianFilterPoints);
         // const approximatedPoints = weightedGroundLevelMedianFilterWindowForRailTen(rangedPoints);
-        const approximatedPoints = triangleBaseDistanceFilter(weightedGroundLevelMedianFilterPoints);
+        const approximatedPoints = bestCombinationFilter(weightedGroundLevelMedianFilterPoints, cubePolyPoints);
         // Вывод точек аппроксимации на график
-        // sections.push({
-        //     label: "Ranged Enhanced vertexOptimizer 18 Portnov",
-        //     points: approximatedPoints,
-        //     showLine: true,
-        //     tension: 0,
-        //     fill: false,
-        //     backgroundColor: 'blue',
-        //     borderColor: 'blue', // Цвет линии
-        //     borderDash: [5, 5] // Стиль пунктирной линии: чередование 5 пикселей линии и 5 пикселей пропуска
-        // });
+        sections.push({
+            label: "Ranged Enhanced bestCombinationFilter 18 Portnov",
+            points: approximatedPoints,
+            showLine: true,
+            tension: 0,
+            fill: false,
+            backgroundColor: 'blue',
+            borderColor: 'blue', // Цвет линии
+            borderDash: [5, 5] // Стиль пунктирной линии: чередование 5 пикселей линии и 5 пикселей пропуска
+        });
         // Добавление исходных точек для сравнения
         // sections.push({ label: "Весовой фильтр по уровню земли", points: weightedGroundLevelMedianFilterPoints, showLine: false, fill: false, backgroundColor: 'red' });
         sections.push({ label: "ТЛО", points: rangedPoints, showLine: false, fill: false, backgroundColor: 'grey' });

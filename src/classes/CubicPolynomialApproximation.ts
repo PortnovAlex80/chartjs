@@ -769,7 +769,6 @@ export class CubicPolynomialApproximation {
         let area = Math.abs(0.5 * (pointA.x * (pointB.y - pointC.y) + pointB.x * (pointC.y - pointA.y) + pointC.x * (pointA.y - pointB.y)));
         let bottom = Math.hypot(pointA.x - pointB.x, pointA.y - pointB.y);
         return 2 * area / bottom;
-    }
-    
+    }   
 
 }

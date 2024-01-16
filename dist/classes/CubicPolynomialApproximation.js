@@ -371,7 +371,7 @@ export class CubicPolynomialApproximation {
         }
         let pointsCopy = [...inputPoints];
         this.removeDuplicatesAndSort();
-        const threshold_rmse = 0.1; // 0.2
+        const threshold_rmse = 0.08; // 0.2
         const threshold_diffRMSE = 0.015; // 0.015
         let remainingPoints = new Set(pointsCopy); // Используем Set для легкого исключения уже обработанных точек
         let bestSegments = [];
