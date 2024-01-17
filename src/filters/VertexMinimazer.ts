@@ -1,7 +1,7 @@
-import leastSquaresFilter from '../filters/leastSquaresFilter.js';
-import { IPoint } from '../interfaces/IPoint';
+import leastSquaresFilter from './LeastSquaresFilter.js';
+import { IPoint } from '../interfaces/IPoint.js';
 
-export function bestCombinationFilter(surfacePoints: IPoint[], polylineSegment: IPoint[], threshold: number = 0.07): IPoint[] {
+export function bestCombinationFilter(surfacePoints: IPoint[], polylineSegment: IPoint[], threshold: number = 0.020): IPoint[] {
 
     if (polylineSegment.length < 3) {
         return polylineSegment; // Возвращаем исходный массив, если точек меньше трех
@@ -9,18 +9,13 @@ export function bestCombinationFilter(surfacePoints: IPoint[], polylineSegment: 
 
     const totalLength = calculateTotalLengthOfPolyline(polylineSegment);
     const totalVertices = polylineSegment.length;
-
-    let bestCombination = polylineSegment;
-    let bestScore = -Infinity; // Инициализируем bestScore как -Infinity для начала сравнения
-
-        let subset = [];
-        let previousIndex = -1;
-        let currentScore = 0;
-        let totalRMSE = 0;
     
         let minSums = Array(polylineSegment.length).fill(Infinity);
         let previousIndices = Array(polylineSegment.length).fill(-1);
         minSums[0] = 0;
+
+        let bestScores = Array(polylineSegment.length).fill(-Infinity);
+        bestScores[0] = 0;
     
         for (let j = 1; j < polylineSegment.length; j++) {
             for (let i = 0; i < j; i++) {
@@ -28,8 +23,9 @@ export function bestCombinationFilter(surfacePoints: IPoint[], polylineSegment: 
                 const currentScore = optimaFunction(i, j, polylineSegment, totalVertices, totalLength);
                 
                 // Проверяем, удовлетворяет ли RMSE заданному порогу и обновляем, если текущая сумма меньше
-                if (segmentRMSE <= threshold && minSums[i] + segmentRMSE < minSums[j]) {
+                if (segmentRMSE <= threshold && minSums[i] + segmentRMSE < minSums[j] && currentScore > bestScores[j]) {
                     minSums[j] = minSums[i] + segmentRMSE;
+                    bestScores[j] = currentScore;
                     previousIndices[j] = i;
                 }
             }
@@ -50,19 +46,17 @@ function reconstructPathUsingPreviousIndices(polylineSegment: IPoint[], previous
     return path;
 }
 
-
 function optimaFunction(i: number, j: number, points: IPoint[], totalVertices: number, totalLength: number) {
     let deletedVerticesScore = (j - i - 1) / totalVertices;
     let lengthScore = lengthOfSegment(i, j, points) / totalLength;
-    return calculateTotalScore(deletedVerticesScore, lengthScore);
-}
-
-function calculateTotalScore(deleteScore: number, lengthScore: number) {
-    if (deleteScore === 0 || lengthScore === 0) {
+    
+    if (deletedVerticesScore === 0 || lengthScore === 0) {
         return 0; // Чтобы избежать деления на ноль
     }
-    return 2 / (1/deleteScore + 1/lengthScore);
+
+    return 1 / 2 / (1/deletedVerticesScore + 1/lengthScore);   // return 2 / (1/deletedVerticesScore + 1/lengthScore);
 }
+
 
 
 function lengthOfSegment(i: number, j: number, points: IPoint[]): number {
@@ -105,18 +99,13 @@ function findNearestPointsByX(subset: IPoint[], allSurfacePoints: IPoint[]): IPo
     return sortedSurfacePoints;
 }
 
-function calculateDistance(point1:IPoint, point2:IPoint) {
-// Реализация вычисления расстояния между двумя точками
-return Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2));
-}
-
 function calculateRMSE(subset: IPoint[], allSurfacePoints: IPoint[]): number {
     // Используем leastSquaresFilter для аппроксимации
     
 // Найти ближайшие точки по X в allSurfacePoints для subset
 const surfacePoints = findNearestPointsByX(subset, allSurfacePoints);
 if (surfacePoints.length < 2) {
-    return 10; // Возвращаем исходный массив, если точек меньше трех
+    return 0; // Возвращаем исходный массив, если точек меньше трех
 }
 
 const approxPoints = leastSquaresFilter(surfacePoints);

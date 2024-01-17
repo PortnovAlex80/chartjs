@@ -66,34 +66,7 @@ function getWeightedMedian(values: number[], basePoint: IPoint, weightedPoints: 
     return weightedValues[weightedValues.length / 2].value;
 }
 
-export const weightedGroundLevelMedianFilterWindowForRailTen: IFilter = (points: IPoint[], maxWindowSize: number = 10, maxLength: number = 0.2): IPoint[] => {
-    const filteredPoints: IPoint[] = [];
-    const threshold = 0.20; // не совсем ясно как он работает, так как не видно визуально отсечения точек.
-    let i = 0;
-    // 
-    while (i < points.length) {
-        let windowSize = 10; // сделать адаптивным в зависимости от плотности точек на 1 м?
-        while (windowSize < Math.min(maxWindowSize, points.length - i) && 
-            Math.abs(points[i + windowSize].x - points[i].x) <= maxLength) { // TODO:  проверить корректность работы с maxLenght
-            windowSize++;
-        }
-
-        const windowPoints = points.slice(i, i + windowSize);
-        const basePoint = windowPoints.reduce((lowest, point) => point.y < lowest.y ? point : lowest, windowPoints[0]);
-        const weightedPoints = windowPoints.filter(point => Math.abs(point.y - basePoint.y) <= threshold);
-
-        const weightedMedianX = getWeightedMedian(weightedPoints.map(p => p.x), basePoint, weightedPoints);
-        const weightedMedianY = getWeightedMedian(weightedPoints.map(p => p.y), basePoint, weightedPoints);
-
-        filteredPoints.push({ x: weightedMedianX, y: weightedMedianY });
-
-        i += windowSize;
-    }
-
-    return filteredPoints;
-};
-
-export const triangleBaseDistanceFilter: IFilter = (points: IPoint[], epsilon: number = 0.15): IPoint[] => {
+const triangleBaseDistanceFilter: IFilter = (points: IPoint[], epsilon: number = 0.15): IPoint[] => {
     const filteredPoints: IPoint[] = [];
 
     if (points.length < 3) {
@@ -121,7 +94,5 @@ export const triangleBaseDistanceFilter: IFilter = (points: IPoint[], epsilon: n
 
     return filteredPoints;
 };
-
-
 
 export default weightedGroundLevelMedianFilter;

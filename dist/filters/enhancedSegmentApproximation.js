@@ -1,4 +1,4 @@
-import leastSquaresFilter from './leastSquaresFilter.js';
+import leastSquaresFilter from './LeastSquaresFilter.js';
 import { CubicPolynomialApproximation } from '../classes/CubicPolynomialApproximation.js';
 // Функция для преобразования двух точек в объект с наклоном и пересечением
 const lineFromPoints = (pointA, pointB) => {
